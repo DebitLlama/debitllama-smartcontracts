@@ -20,7 +20,7 @@ template CommitmentHasher(){
     nullifierHasher.inputs[0] <== nullifier;
     nullifierHasher.inputs[1] <== nonce;
 
-    paymentIntent <== nullifilerHasher.out;
+    paymentIntent <== nullifierHasher.out;
 }
 
 template DirectDebit(){
@@ -48,7 +48,7 @@ template DirectDebit(){
     
     //Hidden signals to verify inputs
     signal payeeSquare;
-    signal debitAmountSquare;
+    signal maxDebitAmountSquare;
     signal debitTimesSquare;
     signal debitIntervalSquare;
 
@@ -59,7 +59,7 @@ template DirectDebit(){
     commitmentHasher.nonce <== nonce;
 
     commitmentHasher.paymentIntent === paymentIntent;
-    commitmetnHasher.commitment === commitmentHash;
+    commitmentHasher.commitment === commitmentHash;
 
     payeeSquare <== payee * payee;
     maxDebitAmountSquare <== maxDebitAmount * maxDebitAmount;
