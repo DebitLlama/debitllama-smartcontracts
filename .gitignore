@@ -9,3 +9,4 @@ cache
 artifacts
 .cache
 .parcel-cache
+dist
