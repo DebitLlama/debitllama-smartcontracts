@@ -1,5 +1,10 @@
 {
-  "name": "hardhat-project",
+  "name": "debitllama",
+  "scripts": {
+    "dev": "parcel frontend/index.html",
+    "build": "parcel build frontend/index.html && npm run copy",
+    "copy": "sh copyToDist.sh"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
@@ -24,6 +29,8 @@
     "ethers": "^5.7.2",
     "hardhat": "^2.15.0",
     "hardhat-gas-reporter": "^1.0.9",
+    "parcel-bundler": "^1.12.5",
+        "parcel": "^2.7.0",
     "prettier": "^2.8.8",
     "prettier-plugin-solidity": "^1.1.3",
     "solhint": "^3.4.1",
@@ -51,7 +58,7 @@
     "ethers": "^5.7.2",
     "ffjavascript": "^0.2.57",
     "hardhat-circom": "^3.3.1",
-    "react": "^18.0.0",
+    "react": "^18.2.0",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
