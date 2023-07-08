@@ -35,6 +35,11 @@ This error is thrown when an ETH top up msg.value is not balance
 */
     error NotTokenAccount();
 
+    /**
+  This error is thrown when we try to top up a token account with ETH
+   */
+    error NotEthAccount();
+
     /*
   This is thrown when a payment intent was cancelled by it's owner.
 */
@@ -90,37 +95,26 @@ interface DirectDebitEvents {
     event NewEthAccount(
         bytes32 indexed commitment,
         address depositFor,
-        uint256 timestamp,
         uint256 balance
     );
     /**
    Emitted when gas tokens are added to an existing account!
    */
 
-    event TopUpETH(
-        bytes32 indexed commitment,
-        uint256 timestamp,
-        uint256 balance
-    );
+    event TopUpETH(bytes32 indexed commitment, uint256 balance);
     /**
     Emitted when a new Token account is created
    */
     event NewTokenAccount(
         bytes32 indexed commitment,
         address depositFor,
-        uint256 timestamp,
         uint256 amount,
         address token
     );
     /**
       Emitted when a token account is topped up
     */
-    event TopUpToken(
-        bytes32 indexed commitment,
-        uint256 timestamp,
-        uint256 amount,
-        address token
-    );
+    event TopUpToken(bytes32 indexed commitment, uint256 amount, address token);
 
     /**
     Emitted when a token account is debited

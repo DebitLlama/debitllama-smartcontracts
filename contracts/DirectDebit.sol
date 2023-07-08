@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import "./Errors.sol";
 
 // This contract  implements direct debit using crypto notes
@@ -18,7 +17,6 @@ import "./Errors.sol";
 struct AccountData {
     bool active;
     address creator;
-    uint256 createdDate;
     IERC20 token;
     uint256 balance;
 }
@@ -67,6 +65,16 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
     */
     uint256 public immutable ownerFeeDivider = 200;
 
+    /**
+    The commitments for each address are stored in a mapping for easy access
+     */
+    mapping(address => mapping(uint256 => bytes32)) public commitments;
+
+    /**
+    The counter is used to access the account commitment index
+     */
+    mapping(address => uint256) public accountCounter;
+
     /* PaymentIntent Hashes are keys to the history of payments
      Each payment intent has a unique hash thanks to the nonce added to the nullifier secret nullifier
      The mapping tracks how many times a payment intent was used and will nullify future payments
@@ -74,9 +82,9 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
     mapping(bytes32 => PaymentIntentHistory) public paymentIntents;
 
     /*
-       Commitments are keys to Account data
+       accounts are keys to Account data
     */
-    mapping(bytes32 => AccountData) public commitments;
+    mapping(bytes32 => AccountData) public accounts;
 
     /*
        The Secret notes are encrypted and stored on-chain
@@ -107,9 +115,9 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         pure
         returns (uint256 relayerFee, uint256 ownerFee, uint256 payment)
     {
-        ownerFee = amount.div(ownerFee);
-        relayerFee = amount.div(relayerFee);
-        payment = (payment.sub(ownerFee)).sub(relayerFee);
+        ownerFee = amount.div(ownerFeeDivider);
+        relayerFee = amount.div(relayerFeeDivider);
+        payment = (amount.sub(ownerFee)).sub(relayerFee);
     }
 
     /**
@@ -126,23 +134,26 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         uint256 balance,
         string calldata encryptedNote
     ) external payable nonReentrant {
-        if (commitments[_commitment].active) revert AccountAlreadyActive();
-        // When cancelling a commitment and withdrawing, commitments.active will be set to false, but the creator address won't be zero!
+        if (accounts[_commitment].active) revert AccountAlreadyActive();
+        // When cancelling a commitment and withdrawing, accounts.active will be set to false, but the creator address won't be zero!
         // This is an edge case I check for here, to not deposit into inactivated but previously existing accounts!
-        if (commitments[_commitment].creator != address(0))
+        if (accounts[_commitment].creator != address(0))
             revert AccountAlreadyExists();
         if (balance == 0) revert ZeroTopup();
         if (balance != msg.value) revert NotEnoughValue();
 
+        // A convenience mapping to fetch the commitments by address to access accounts later!
+        commitments[msg.sender][accountCounter[msg.sender]] = _commitment;
+        accountCounter[msg.sender] += 1;
+
         // Record the Account creation
-        commitments[_commitment].active = true;
-        commitments[_commitment].creator = msg.sender;
-        commitments[_commitment].createdDate = block.timestamp;
-        commitments[_commitment].balance = balance;
+        accounts[_commitment].active = true;
+        accounts[_commitment].creator = msg.sender;
+        accounts[_commitment].balance = balance;
         // Save the encrypted note string to storage!
         encryptedNotes[_commitment] = encryptedNote;
 
-        emit NewEthAccount(_commitment, msg.sender, block.timestamp, balance);
+        emit NewEthAccount(_commitment, msg.sender, balance);
     }
 
     /**
@@ -158,28 +169,25 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         address token,
         string calldata encryptedNote
     ) external nonReentrant {
-        if (commitments[_commitment].active) revert AccountAlreadyActive();
+        if (accounts[_commitment].active) revert AccountAlreadyActive();
         if (balance == 0) revert ZeroTopup();
         // When cancelling a commitment and withdrawing, active will be set back to false, but the creator address won't be zero!
-        if (commitments[_commitment].creator != address(0))
+        if (accounts[_commitment].creator != address(0))
             revert AccountAlreadyExists();
 
-        commitments[_commitment].active = true;
-        commitments[_commitment].creator = msg.sender;
-        commitments[_commitment].createdDate = block.timestamp;
-        commitments[_commitment].balance = balance;
-        commitments[_commitment].token = IERC20(token);
+        // A convenience mapping to fetch the commitments by address to access accounts later!
+        commitments[msg.sender][accountCounter[msg.sender]] = _commitment;
+        accountCounter[msg.sender] += 1;
+
+        accounts[_commitment].active = true;
+        accounts[_commitment].creator = msg.sender;
+        accounts[_commitment].balance = balance;
+        accounts[_commitment].token = IERC20(token);
         encryptedNotes[_commitment] = encryptedNote;
         //If the user doesn't have enough token balance this will throw
         IERC20(token).safeTransferFrom(msg.sender, address(this), balance);
 
-        emit NewTokenAccount(
-            _commitment,
-            msg.sender,
-            block.timestamp,
-            balance,
-            token
-        );
+        emit NewTokenAccount(_commitment, msg.sender, balance, token);
     }
 
     /**
@@ -194,12 +202,15 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         bytes32 _commitment,
         uint256 balance
     ) external payable nonReentrant {
-        if (!commitments[_commitment].active) revert InactiveAccount();
+        if (!accounts[_commitment].active) revert InactiveAccount();
         if (balance == 0) revert ZeroTopup();
+        if (balance != msg.value) revert NotEnoughValue();
+        if (accounts[_commitment].token != IERC20(address(0)))
+            revert NotEthAccount();
         // Adds the balance to the account!
-        commitments[_commitment].balance = balance;
+        accounts[_commitment].balance += balance;
         // Emit a top up event
-        emit TopUpETH(_commitment, block.timestamp, balance);
+        emit TopUpETH(_commitment, balance);
     }
 
     /**
@@ -212,13 +223,13 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         bytes32 _commitment,
         uint256 balance
     ) external nonReentrant {
-        if (!commitments[_commitment].active) revert InactiveAccount();
+        if (!accounts[_commitment].active) revert InactiveAccount();
         if (balance == 0) revert ZeroTopup();
-        if (commitments[_commitment].token == IERC20(address(0)))
+        if (accounts[_commitment].token == IERC20(address(0)))
             revert NotTokenAccount();
 
-        commitments[_commitment].balance = balance;
-        IERC20(commitments[_commitment].token).safeTransferFrom(
+        accounts[_commitment].balance += balance;
+        IERC20(accounts[_commitment].token).safeTransferFrom(
             msg.sender,
             address(this),
             balance
@@ -226,9 +237,8 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
 
         emit TopUpToken(
             _commitment,
-            block.timestamp,
             balance,
-            address(commitments[_commitment].token)
+            address(accounts[_commitment].token)
         );
     }
 
@@ -270,7 +280,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         uint256[4] calldata debit
     ) external {
         if (!_verifyProof(proof, hashes, payee, debit)) revert InvalidProof();
-        if (msg.sender != commitments[hashes[1]].creator)
+        if (msg.sender != accounts[hashes[1]].creator)
             revert OnlyAccountOwner();
         paymentIntents[hashes[0]].isNullified = true;
         emit PaymentIntentCancelled(hashes[1], hashes[0], payee);
@@ -279,14 +289,14 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
     // The account creator can withdraw the value deposited and close the account
     // This will set the active false but the creator address remains, hence the edge case we handled on account creation
     function withdraw(bytes32 commitment) external nonReentrant {
-        if (!commitments[commitment].active) revert InactiveAccount();
-        if (msg.sender != commitments[commitment].creator)
+        if (!accounts[commitment].active) revert InactiveAccount();
+        if (msg.sender != accounts[commitment].creator)
             revert OnlyAccountOwner();
 
-        commitments[commitment].active = false;
-        uint256 balance = commitments[commitment].balance;
+        accounts[commitment].active = false;
+        uint256 balance = accounts[commitment].balance;
 
-        if (address(commitments[commitment].token) != address(0)) {
+        if (address(accounts[commitment].token) != address(0)) {
             _processTokenWithdraw(commitment, msg.sender, balance);
         } else {
             _processEthWithdraw(commitment, msg.sender, balance);
@@ -311,9 +321,9 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         if (paymentIntents[hashes[0]].withdrawalCount == debit[1])
             revert PaymentIntentExpired();
         // The account we are charging is inactive!
-        if (!commitments[hashes[1]].active) revert InactiveAccount();
+        if (!accounts[hashes[1]].active) revert InactiveAccount();
         // The account has insufficient balance to continue
-        if (debit[3] > commitments[hashes[1]].balance)
+        if (debit[3] > accounts[hashes[1]].balance)
             revert NotEnoughAccountBalance();
 
         // The authorized amount must be bigger or equal than the amount withdrawn!
@@ -368,7 +378,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         paymentIntents[hashes[0]].lastDate = block.timestamp;
 
         // Process the withdraw
-        if (address(commitments[hashes[1]].token) != address(0)) {
+        if (address(accounts[hashes[1]].token) != address(0)) {
             _processTokenWithdraw(hashes[1], payee, payment);
             _processTokenWithdraw(hashes[1], _owner, ownerFee);
             _processTokenRewards(hashes[1], relayerFee);
@@ -377,7 +387,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
             _processEthWithdraw(hashes[1], payee, payment);
             // Send the fee to the owner
             _processEthWithdraw(hashes[1], _owner, ownerFee);
-            _processETHRewards(hashes[1], payment);
+            _processETHRewards(hashes[1], relayerFee);
         }
 
         emit AccountDebited(hashes[1], payee, payment);
@@ -392,8 +402,8 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         address payee,
         uint256 payment
     ) internal {
-        commitments[commitment].token.safeTransfer(payable(payee), payment);
-        commitments[commitment].balance -= payment;
+        accounts[commitment].token.safeTransfer(payable(payee), payment);
+        accounts[commitment].balance -= payment;
     }
 
     /**
@@ -406,7 +416,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         uint256 payment
     ) internal {
         Address.sendValue(payable(payee), payment);
-        commitments[commitment].balance -= payment;
+        accounts[commitment].balance -= payment;
     }
 
     /**
@@ -414,7 +424,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
     */
 
     function _processETHRewards(bytes32 commitment, uint256 payment) internal {
-        if (msg.sender != commitments[commitment].creator) {
+        if (msg.sender != accounts[commitment].creator) {
             // Relaye fee is paid here
             _processEthWithdraw(commitment, msg.sender, payment);
         } else {
@@ -431,7 +441,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         bytes32 commitment,
         uint256 payment
     ) internal {
-        if (msg.sender != commitments[commitment].creator) {
+        if (msg.sender != accounts[commitment].creator) {
             //Relayer fee is paid here
             _processTokenWithdraw(commitment, msg.sender, payment);
         } else {
