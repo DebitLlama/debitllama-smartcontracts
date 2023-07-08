@@ -38,3 +38,9 @@ Accounts only work with a single kind of currency at once, so different currenci
 `cancelPaymentIntent` will let the account owner to cancel a payment intent so it can't be used anymore. The account owner must posess the payment intent to do this. This will not close the account, only cancel all future direct debits with the Payment Intent
 
 `withdraw` will let the account creator withdraw the deposited value and this will also close the account. 
+
+### How to Run
+
+`npx hardhat test`
+
+`npx hardhat compile`

@@ -1,1 +1,0 @@
-The front end for the DApp
