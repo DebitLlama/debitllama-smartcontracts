@@ -510,8 +510,259 @@ describe("It should deploy a contract and test it", function () {
     expect(errorMessage.includes("InactiveAccount")).to.be.true;
   });
 
-  it("cancel payment intent tests", async function () {
-  });
+  it("Direct debit errors tests, cancel payment intent", async function () {
+    const { owner, alice, bob, relayer, directDebit, MOCKERC20 } =
+      await setupTests();
 
-  it("Direct debit errors tests, cancel payment intent", async function () {});
+    // I test direct debit with an ETH Account
+    const ethAccountNote = newAccountSecrets();
+    const accountSecrets = decodeAccountSecrets(ethAccountNote);
+    const ethAccountCommitment = toNoteHex(accountSecrets.commitment);
+
+    await directDebit.connect(alice).depositEth(
+      ethAccountCommitment,
+      parseEther("10"),
+      ethAccountNote,
+      { value: parseEther("10") },
+    );
+
+    const paymentIntent = await createPaymentIntent({
+      paymentIntentSecret: {
+        note: ethAccountNote,
+        payee: bob.address,
+        maxDebitAmount: parseEther("1").toString(),
+        debitTimes: 2,
+        debitInterval: 0, // the interval will remain zero as it's hard to test passing time with unit tests
+      },
+    });
+
+    // The relayer will direct debit that eth account, I need to test the verifyPaymentIntent function
+
+    let errorOccured = false;
+    let errorMessage = "";
+    try {
+      // InvalidProof
+
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent.proof),
+        [
+          toNoteHex(paymentIntent.publicSignals[0]),
+          toNoteHex(paymentIntent.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("100"), 1, 0, parseEther("10")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("InvalidProof")).to.be.true;
+    // PaymentNotAuthorized
+
+    errorOccured = false;
+    errorMessage = "";
+    try {
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent.proof),
+        [
+          toNoteHex(paymentIntent.publicSignals[0]),
+          toNoteHex(paymentIntent.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("10"), 2, 0, parseEther("100")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("PaymentNotAuthorized")).to.be.true;
+
+    // Cancel payment intent OnlyRelatedPartiesCanCancel
+    errorOccured = false;
+    errorMessage = "";
+
+    try {
+      await directDebit.cancelPaymentIntent(
+        packToSolidityProof(paymentIntent.proof),
+        [
+          toNoteHex(paymentIntent.publicSignals[0]),
+          toNoteHex(paymentIntent.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("1"), 2, 0, parseEther("1")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("OnlyRelatedPartiesCanCancel"));
+
+    await directDebit.connect(alice).cancelPaymentIntent(
+      packToSolidityProof(paymentIntent.proof),
+      [
+        toNoteHex(paymentIntent.publicSignals[0]),
+        toNoteHex(paymentIntent.publicSignals[1]),
+      ],
+      bob.address,
+      [parseEther("1"), 2, 0, parseEther("1")],
+    );
+
+    // PaymentIntentNullified
+
+    errorOccured = false;
+    errorMessage = "";
+    try {
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent.proof),
+        [
+          toNoteHex(paymentIntent.publicSignals[0]),
+          toNoteHex(paymentIntent.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("1"), 2, 0, parseEther("1")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("PaymentIntentNullified")).to.be.true;
+
+    // PaymentIntentExpired
+    const paymentIntent2 = await createPaymentIntent({
+      paymentIntentSecret: {
+        note: ethAccountNote,
+        payee: bob.address,
+        maxDebitAmount: parseEther("10").toString(),
+        debitTimes: 1,
+        debitInterval: 0,
+      },
+    });
+
+    await directDebit.directdebit(
+      packToSolidityProof(paymentIntent2.proof),
+      [
+        toNoteHex(paymentIntent2.publicSignals[0]),
+        toNoteHex(paymentIntent2.publicSignals[1]),
+      ],
+      bob.address,
+      [parseEther("10"), 1, 0, parseEther("1")],
+    );
+
+    errorOccured = false;
+    errorMessage = "";
+    try {
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent2.proof),
+        [
+          toNoteHex(paymentIntent2.publicSignals[0]),
+          toNoteHex(paymentIntent2.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("10"), 1, 0, parseEther("1")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("PaymentIntentExpired")).to.be.true;
+
+    // NotEnoughAccountBalance
+    const paymentIntent3 = await createPaymentIntent({
+      paymentIntentSecret: {
+        note: ethAccountNote,
+        payee: bob.address,
+        maxDebitAmount: parseEther("100").toString(),
+        debitTimes: 1,
+        debitInterval: 0,
+      },
+    });
+
+    errorMessage = "";
+    try {
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent3.proof),
+        [
+          toNoteHex(paymentIntent3.publicSignals[0]),
+          toNoteHex(paymentIntent3.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("100"), 1, 0, parseEther("100")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("NotEnoughAccountBalance")).to.be.true;
+
+    // EarlyPaymentNotAllowed
+
+    const paymentIntent4 = await createPaymentIntent({
+      paymentIntentSecret: {
+        note: ethAccountNote,
+        payee: bob.address,
+        maxDebitAmount: parseEther("0.1").toString(),
+        debitTimes: 10,
+        debitInterval: 10000,
+      },
+    });
+
+    await directDebit.directdebit(
+      packToSolidityProof(paymentIntent4.proof),
+      [
+        toNoteHex(paymentIntent4.publicSignals[0]),
+        toNoteHex(paymentIntent4.publicSignals[1]),
+      ],
+      bob.address,
+      [parseEther("0.1"), 10, 10000, parseEther("0.1")],
+    );
+    errorOccured = false;
+    errorMessage = "";
+
+    try {
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent4.proof),
+        [
+          toNoteHex(paymentIntent4.publicSignals[0]),
+          toNoteHex(paymentIntent4.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("0.1"), 10, 10000, parseEther("0.1")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("EarlyPaymentNotAllowed")).to.be.true;
+
+    // InactiveAccount
+
+    await directDebit.connect(alice).withdraw(ethAccountCommitment);
+    errorOccured = false;
+    errorMessage = "";
+    try {
+      await directDebit.directdebit(
+        packToSolidityProof(paymentIntent4.proof),
+        [
+          toNoteHex(paymentIntent4.publicSignals[0]),
+          toNoteHex(paymentIntent4.publicSignals[1]),
+        ],
+        bob.address,
+        [parseEther("0.1"), 10, 10000, parseEther("0.1")],
+      );
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("InactiveAccount")).to.be.true;
+  });
 });

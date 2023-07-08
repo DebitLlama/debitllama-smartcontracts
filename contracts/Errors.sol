@@ -77,6 +77,11 @@ This error is thrown when an ETH top up msg.value is not balance
     error OnlyAccountOwner();
 
     /**
+      Only Related parties can cancel a payment intent. This means the creator or the payee
+     */
+    error OnlyRelatedPartiesCanCancel();
+
+    /**
     Thrown if the commitment on a payment intent  history does not match the account commitment!
      */
     error CommitmentMismatch();

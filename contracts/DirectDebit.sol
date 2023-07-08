@@ -280,8 +280,8 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         uint256[4] calldata debit
     ) external {
         if (!_verifyProof(proof, hashes, payee, debit)) revert InvalidProof();
-        if (msg.sender != accounts[hashes[1]].creator)
-            revert OnlyAccountOwner();
+        if (msg.sender != accounts[hashes[1]].creator && msg.sender != payee)
+            revert OnlyRelatedPartiesCanCancel();
         paymentIntents[hashes[0]].isNullified = true;
         emit PaymentIntentCancelled(hashes[1], hashes[0], payee);
     }
@@ -322,12 +322,13 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
             revert PaymentIntentExpired();
         // The account we are charging is inactive!
         if (!accounts[hashes[1]].active) revert InactiveAccount();
-        // The account has insufficient balance to continue
-        if (debit[3] > accounts[hashes[1]].balance)
-            revert NotEnoughAccountBalance();
 
         // The authorized amount must be bigger or equal than the amount withdrawn!
         if (debit[0] < debit[3]) revert PaymentNotAuthorized();
+
+        // The account has insufficient balance to continue
+        if (debit[3] > accounts[hashes[1]].balance)
+            revert NotEnoughAccountBalance();
 
         // Enforce the debit interval!
         if (paymentIntents[hashes[0]].lastDate.add(debit[2]) > block.timestamp)
