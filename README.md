@@ -44,3 +44,12 @@ Accounts only work with a single kind of currency at once, so different currenci
 `npx hardhat test`
 
 `npx hardhat compile`
+
+TODO: Add deployment task
+
+### Bundle
+
+Rollup is used to Bundle the client side code for the browser, it's building a minified iife.
+
+`npm run build-dep` to build the dependency.
+It's used by the server
