@@ -128,7 +128,16 @@ export function generatePaymentIntentNullifier(
 }
 
 export function rbigint(): bigint {
-  return utils.leBuff2int(crypto.randomBytes(31));
+  return utils.leBuff2int(getRandomBytes(31));
+}
+export function getRandomBytes(n: number) {
+  let array = new Uint8Array(n);
+  if (typeof globalThis.crypto !== "undefined") { // Supported
+    globalThis.crypto.getRandomValues(array);
+  } else { // NodeJS
+    crypto.randomFillSync(array);
+  }
+  return array;
 }
 
 /**
@@ -136,7 +145,7 @@ export function rbigint(): bigint {
  * @param proof The proof generated with SnarkJS.
  * @returns The Solidity compatible proof.
  */
-export default function packToSolidityProof(proof: Proof): SolidityProof {
+export function packToSolidityProof(proof: Proof): SolidityProof {
   return [
     proof.pi_a[0],
     proof.pi_a[1],
