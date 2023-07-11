@@ -1,9 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import packToSolidityProof, {
+import {
   createPaymentIntent,
   decodeAccountSecrets,
   newAccountSecrets,
+  packToSolidityProof,
   toNoteHex,
 } from "../lib/directDebit";
 import { ZEROADDRESS } from "./prooftest";
