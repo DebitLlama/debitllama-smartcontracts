@@ -51,19 +51,11 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
 
     address payable public _owner; // The owner of the contract that can update the feeless token's address
 
-    /** 
-    0.5% fee is sent to the relayer, the msg.sender that submits the direct debit transaction
-    We divide the payout with the relayerFeeDivider.
-    This allows the user to recieve a 0.5% cashback on transactions he finalizes, or the debitor can pay 0.5% less fees if the submit the tx.
-    Alternatively used to pay relayers rewards, as they can earn 0.5% fee to relay transactions
-    */
-    uint256 public immutable relayerFeeDivider = 200;
-
     /**
-     0.5% fee sent to the deployer of this contract on all transactions. 
+     1% fee sent to the deployer of this contract on all transactions. 
      We divide the payout with the ownerFeeDivider
     */
-    uint256 public immutable ownerFeeDivider = 200;
+    uint256 public immutable ownerFeeDivider = 100;
 
     /**
     The commitments for each address are stored in a mapping for easy access
@@ -110,14 +102,9 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
    */
     function calculateFee(
         uint256 amount
-    )
-        public
-        pure
-        returns (uint256 relayerFee, uint256 ownerFee, uint256 payment)
-    {
+    ) public pure returns (uint256 ownerFee, uint256 payment) {
         ownerFee = amount.div(ownerFeeDivider);
-        relayerFee = amount.div(relayerFeeDivider);
-        payment = (amount.sub(ownerFee)).sub(relayerFee);
+        payment = amount.sub(ownerFee);
     }
 
     /**
@@ -331,8 +318,11 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
             revert NotEnoughAccountBalance();
 
         // Enforce the debit interval!
-        if (paymentIntents[hashes[0]].lastDate.add(debit[2]) > block.timestamp)
-            revert EarlyPaymentNotAllowed();
+        // The debitInterval is always in days!
+        if (
+            paymentIntents[hashes[0]].lastDate.add(debit[2] * 1 days) >
+            block.timestamp
+        ) revert EarlyPaymentNotAllowed();
         // verify the ZKP
         if (!_verifyProof(proof, hashes, payee, debit)) revert InvalidProof();
     }
@@ -370,9 +360,7 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         uint256[4] calldata debit
     ) internal {
         // Calculate the fee
-        (uint256 relayerFee, uint256 ownerFee, uint256 payment) = calculateFee(
-            debit[3]
-        );
+        (uint256 ownerFee, uint256 payment) = calculateFee(debit[3]);
 
         // Add a debit time to the nullifier
         paymentIntents[hashes[0]].withdrawalCount += 1;
@@ -382,13 +370,11 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
         if (address(accounts[hashes[1]].token) != address(0)) {
             _processTokenWithdraw(hashes[1], payee, payment);
             _processTokenWithdraw(hashes[1], _owner, ownerFee);
-            _processTokenRewards(hashes[1], relayerFee);
         } else {
             // Transfer the eth
             _processEthWithdraw(hashes[1], payee, payment);
             // Send the fee to the owner
             _processEthWithdraw(hashes[1], _owner, ownerFee);
-            _processETHRewards(hashes[1], relayerFee);
         }
 
         emit AccountDebited(hashes[1], payee, payment);
@@ -418,36 +404,5 @@ contract DirectDebit is ReentrancyGuard, DirectDebitErrors, DirectDebitEvents {
     ) internal {
         Address.sendValue(payable(payee), payment);
         accounts[commitment].balance -= payment;
-    }
-
-    /**
-      Send the eth rewards to the relayer or emit a Cashback event!  
-    */
-
-    function _processETHRewards(bytes32 commitment, uint256 payment) internal {
-        if (msg.sender != accounts[commitment].creator) {
-            // Relaye fee is paid here
-            _processEthWithdraw(commitment, msg.sender, payment);
-        } else {
-            // Else if the account owner sent the tx there is a 0.5% CashBack so the relayer fee stays in the account
-            emit Cashback(commitment, payment);
-        }
-    }
-
-    /**
-       Send the token reward to the relayer or emit a cashback event! 
-    */
-
-    function _processTokenRewards(
-        bytes32 commitment,
-        uint256 payment
-    ) internal {
-        if (msg.sender != accounts[commitment].creator) {
-            //Relayer fee is paid here
-            _processTokenWithdraw(commitment, msg.sender, payment);
-        } else {
-            // Else if the msg.sender is the creator there is a 0.5% CashBack so the relayer fee stays in the account
-            emit Cashback(commitment, payment);
-        }
     }
 }

@@ -87,12 +87,11 @@ describe("It should deploy a contract and test it", function () {
     const fees = await directDebit.calculateFee(parseEther("1"));
 
     //so there are 0.5% fees that I get by dividing the amount with 200
-    expect(fees[0]).to.equal(parseEther("0.005"));
-    expect(fees[1]).to.equal(parseEther("0.005"));
-    expect(fees[2]).to.equal(parseEther("0.99"));
+    expect(fees[0]).to.equal(parseEther("0.01"));
+    expect(fees[1]).to.equal(parseEther("0.99"));
 
     expect(bobBalanceAfter).to.equal(
-      bobBalanceBefore.add(fees[2]),
+      bobBalanceBefore.add(fees[1]),
     );
     ethAccountData = await directDebit.accounts(commitment);
     expect(ethAccountData.balance).to.equal(parseEther("19"));
@@ -229,9 +228,8 @@ describe("It should deploy a contract and test it", function () {
 
     const fees = await directDebit.calculateFee(parseEther("5"));
 
-    expect(fees[0]).to.equal(parseEther("0.025"));
-    expect(fees[1]).to.equal(parseEther("0.025"));
-    expect(fees[2]).to.equal(parseEther("4.95"));
+    expect(fees[0]).to.equal(parseEther("0.05"));
+    expect(fees[1]).to.equal(parseEther("4.95"));
 
     expect(await MOCKERC20.balanceOf(bob.address)).to.equal(parseEther("4.95"));
 

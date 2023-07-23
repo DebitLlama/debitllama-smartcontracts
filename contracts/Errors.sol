@@ -131,11 +131,6 @@ interface DirectDebitEvents {
     );
 
     /**
-     Emitted when cashback is given to the account owner
-     */
-    event Cashback(bytes32 indexed commitment, uint256 amount);
-
-    /**
     Emitted when a payment intent is cancelled
     */
     event PaymentIntentCancelled(
