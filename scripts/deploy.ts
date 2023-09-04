@@ -20,4 +20,4 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
-// Direct Debit is deployed to :  0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 on Donau testnet
+//Direct Debit is deployed to :  0x003E9E692029118e110c9A73a37B62b04D3d79e9 on Donau testnet

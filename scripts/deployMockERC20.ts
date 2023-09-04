@@ -15,4 +15,4 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
-// USDTM is deployed to :  0x5FbDB2315678afecb367f032d93F642f64180aa3 on Donau testnet
+// USDTM is deployed to :  0x4420a4415033bd22393d3A918EF8d2c9c62efD99 on Donau testnet
