@@ -24,3 +24,12 @@ export async function setupTests() {
     MOCKERC20,
   };
 }
+
+export async function setupRelayerGasTracker() {
+  const [owner, alice, relayer] = await ethers.getSigners();
+  const factory = await ethers.getContractFactory("RelayerGasTracker");
+  const gasTracker = await factory.deploy();
+  await gasTracker.deployed();
+  await gasTracker.setRelayer(relayer.address);
+  return { gasTracker, owner, alice, relayer };
+}
