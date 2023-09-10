@@ -18,7 +18,7 @@ contract RelayerGasTracker is Ownable {
     mapping(address => uint256) public total;
 
     // The event that is emitted when a relayer is topped up!
-    event TopUpEvent(address from, uint256 amount);
+    event TopUpEvent(address indexed from, uint256 indexed amount);
 
     // The owner can update the relayer address any time
     function setRelayer(address to) external onlyOwner {
