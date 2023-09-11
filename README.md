@@ -1,29 +1,59 @@
 # Direct Debit Using Note Accounts
 
-### How it works: Circuits
+This repository contaisn the implementation of a direct debit system that allows merchants to pull payments from accounts using zksnarks created by customers off-chain. The core of the direct debit implementation can be found in DirectDebit.sol, while the child contracts implement different account types.
+
+## How it works: Circuits
 
 There is a DirectDebit() template in the directDebit.circom file.
-This contains public inputs paymentIntent, commitmentHash, payee, maxDebitAmount, debitTimes, debitInterval and private inputs secret, nonce and nullifier.
+This contains **public inputs paymentIntent, commitmentHash, payee, maxDebitAmount, debitTimes, debitInterval** and private inputs secret, nonce and nullifier.
 
 When creating an account we calculate the hash of the secret with the nullifier.
-Commitment is hash(nullifier,secret)
+The commitment is a poseidon hash of (nullifier,secret)
 
-When creating a payment intent, the intent itself is the nullifier, we make it reusable by hashing it with a nonce
+When creating a payment intent, the payment intent variable itself is a nullifier, we make the account secrets reusable by hashing the secret nullifier with a nonce
+
 PaymentIntent = hash(nullifier,nonce)
+
 The nonce is random.
 
-To verify other public inputs like payee, maxDebitAmount,debitTimes and debitInterval we use Hidden Signals. These signals are used to make sure that these parameters of the payment intent cannot be altered.
+**To verify other public inputs** like payee, maxDebitAmount,debitTimes and debitInterval ***we use Hidden Signals** in the circuit. These signals are used to make sure that these parameters of the payment intent cannot be altered.
 
-### How it works: Smart Contract
+## How it works: Smart Contract
 
-The DirectDebit.sol smart contract contains the implementation for the payments.
-users create Accounts with AccountData and have PaymentIntentHistory on processed payments. 
+The **DirectDebit.sol** smart contract contains the implementation for the basic direct debit payments.
+This is an abstract contract that needs to be implemented to create different debit accounts.
+Currently Virtual Accounts and Connected Wallets are implemented.
 
-Payment Intents are created off-chain, passed to the merchant or relayer and then used to charge the account.
+**Virtual Accounts** are smart contract accounts that store the value inside the contract. This is currently the only way to implement direct debit for ETH, but supports ERC-20 tokens also.
 
-Constructor takes the verifier contract address and the owner of the contract.
+The **Connected Wallets** contract supports external connected wallets that allow spending ERC-20 tokens on behalf of the account owner. This account type supports only ERC-20 tokens, but it works with external cold wallets.
 
-A function is used to calculate the fees that is sent to the relayer, the owner and the final payment. If the creator of the account is the relayer then it's a 0.5% Cashback basicly and not a fee.
+
+## How it's used?
+
+Users create Accounts using the computed commitment.
+
+Payment Intents are created off-chain, passed to the merchant or relayer and then used to pull payments from the account at a specified time.
+
+### Deployment:
+The verifier contract must be deployed first, then the constructor of the Direct Debit contract uses the verifier contract address and sets the address of the owner of the contract.
+
+### API
+
+**Direct Debit**
+
+The underying direct debit contract exposes the following external functions:
+
+`calculateFee` Calculate the fee of the transaction
+
+`directdebit` Debit the account using the zksnark proof, and it's public inputs. 
+        You can find more information about it in the source code!
+
+`cancelPaymentIntent` The account owner or the payee can cancel the payment intent so it's not usable anymore for future payments.
+
+`updateFee` The owner of the contract can update how the fee is calculated
+
+**Virtual Accounts**
 
 `depositEth` is used to create an account. The user computed the commitment off-chain and deposits value. The secret and the nullifier must be encrypted with with the wallet using the RPC call `eth_getEncryptionPublicKey` to get the key.  The crypto note is essentially saved on the chain so the users don't have to download a file. This was insipired by tornado cash note accounts which kind of do the same thing but with a work around for privacy. Here privacy is not a concern.
 
@@ -33,23 +63,58 @@ Accounts only work with a single kind of currency at once, so different currenci
 
 `topUpETH` will let the user top up their account, identified by the commitment and `topUpTokens` will do the same for ERC20 tokens.
 
-`directdebit` The function is used to process payment intents that were created off chain and belong to an account. this will verify and process the payment
-
-`cancelPaymentIntent` will let the account owner to cancel a payment intent so it can't be used anymore. The account owner must posess the payment intent to do this. This will not close the account, only cancel all future direct debits with the Payment Intent
-
 `withdraw` will let the account creator withdraw the deposited value and this will also close the account. 
 
-### How to Run
+**Connected Wallets**
+
+`connectWallet` this function is used to connect an external wallet account to the smart contract using a commitment, the token to use for payments and the encrypted note.
+
+`disconnectWallet` The owner of the wallet can disable the account and disconnect his wallet. Nullifying all future payments
+
+## Client Side 
+
+To create accounts and payment intents, we use cryptography that is not included by default in the browser. 
+The `/lib` directory contains the code needed to do this.
+`directDebit.ts` and `directDebit.js` is identical, but the js was needed for more simple bundling configurations.
+To Bundle the code Rollup is used, it's building a minified iife that can be imported by the browser.
+You can run `npm run build-dep` to build the dependency or find the file commited in the repository at `directdebit_bundle.js`
+
+### API
+I'm only going to mention some of the more important functions here
+
+`newAccountSecrets` is used to compute a new account secret that can be saved as an encrypted note inside the smart contract. Always encrypt this before saving it else anyone can access it! We use double layer encryption in DebitLlama for this, that is both symmetric and asymmetric encryption before saving it.
+
+`decodeAccountSecrets` will take the unencrypted note and extract the secret.
+
+`createPaymentIntent` will compute a zksnark using the note and the payment intent parameters
+
+**Account Note Encryption**
+
+`encryptData` will use a public key and encrypt the note using eth-sig-util, the encrypted data will need to be packed with `packEncryptedMEssage` before it can be saved on-chain. The encryption uses a public key used by ethereum wallets.
+
+`decryptData` will decrypt the encrypted data, but before it can do it we need to unpack it using `unpackEncryptedMessage`. The decryption uses an etherem wallet private key.
+
+The client must make sure to implement a symmetric encryption if it has no access to the wallet private key like this is done with DebitLlama where the ethereum key used to encrypt is supplied by the server, but the final decryption happens in the browser using a user supplied password. This way DebitLlama has zero access to the underlying secret at any time and creating payment intents and spending from a wallet is abstracted to just supplying a password!
+
+
+## How to Run Test
 
 `npx hardhat test`
 
-`npx hardhat compile`
-
 TODO: Add deployment task
 
-### Bundle
+## Deployment
 
-Rollup is used to Bundle the client side code for the browser, it's building a minified iife.
+Configure hardhat.config.ts with the network and run the deploy script
 
-`npm run build-dep` to build the dependency.
-It's used by the server
+`npx hardhat run scripts/deploy --network <network>`
+
+
+# Other contracts
+The repository contains other contracts used by DebitLlama like the *RelayerGasTracker*.
+This is a simple convenience contract that allows depositing gas to a relayer, instead of sending a transaction directly we use a smart contract for this to store the top up history. `TopUpEvent` events are emitted that can be fetched by a relayer to process top up transactions to it using contract calls.
+
+# Important Note
+Currently the Phase 2 ceremony for the circuits are unfinished as there were no contributions,yet. We will host the ceremony at snarkyceremonies.com where anyone can contribute with some entropy and help secure our circuits and smart contracts!
+
+Until this is done the smart contracts are not ready for production.
