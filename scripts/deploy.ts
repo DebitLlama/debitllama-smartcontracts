@@ -5,19 +5,45 @@ async function main() {
     "contracts/PaymentIntentVerifier.sol:Verifier",
   );
   const Verifier = await verifierFactory.deploy();
-  await Verifier.deployed();
-  const DirectDebitFactory = await ethers.getContractFactory("DirectDebit");
-  const directDebit = await DirectDebitFactory.deploy(Verifier.address);
-  await directDebit.deployed();
+  await Verifier.deployed().then(async () => {
+    console.log("Verifier contract is deployed to ", Verifier.address);
 
-  console.log("Direct Debit is deployed to : ", directDebit.address);
+    const VirtualAccountsFactory = await ethers.getContractFactory(
+      "VirtualAccounts",
+    );
+
+    const virtualAccounts = await VirtualAccountsFactory.deploy(
+      Verifier.address,
+    );
+
+    await virtualAccounts.deployed().then(async () => {
+      console.log(
+        "Virtual Accounts contract is deployed to : ",
+        virtualAccounts.address,
+      );
+
+      const ConnectedWalletsFactory = await ethers.getContractFactory(
+        "ConnectedWallets",
+      );
+      const connectedWallets = await ConnectedWalletsFactory.deploy(
+        Verifier.address,
+      );
+      await connectedWallets.deployed();
+
+      console.log(
+        "Connected Wallets contract is deployed to: ",
+        connectedWallets.address,
+      );
+    });
+  });
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
 
-//Direct Debit is deployed to :  0x003E9E692029118e110c9A73a37B62b04D3d79e9 on Donau testnet
+// DONAU TESTNET ADDRESSES:
+// Verifier contract is deployed to  0x054429Cf1E1d2CBA1e2EE841b4D7f95205209446
+// Virtual Accounts contract is deployed to :  0x12F85Dd36456088f46baD586923eF2eB13482bc3
+// Connected Wallets contract is deployed to:  0xd14e897048cd38b9A1872959358B59A974FbACC1

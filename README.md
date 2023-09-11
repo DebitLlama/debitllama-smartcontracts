@@ -97,17 +97,15 @@ I'm only going to mention some of the more important functions here
 The client must make sure to implement a symmetric encryption if it has no access to the wallet private key like this is done with DebitLlama where the ethereum key used to encrypt is supplied by the server, but the final decryption happens in the browser using a user supplied password. This way DebitLlama has zero access to the underlying secret at any time and creating payment intents and spending from a wallet is abstracted to just supplying a password!
 
 
-## How to Run Test
+## How to Run Tests
 
 `npx hardhat test`
-
-TODO: Add deployment task
 
 ## Deployment
 
 Configure hardhat.config.ts with the network and run the deploy script
 
-`npx hardhat run scripts/deploy --network <network>`
+`npx hardhat run scripts/deploy.ts --network <network>`
 
 
 # Other contracts
@@ -118,3 +116,13 @@ This is a simple convenience contract that allows depositing gas to a relayer, i
 Currently the Phase 2 ceremony for the circuits are unfinished as there were no contributions,yet. We will host the ceremony at snarkyceremonies.com where anyone can contribute with some entropy and help secure our circuits and smart contracts!
 
 Until this is done the smart contracts are not ready for production.
+
+# Latest Deployments
+
+### Doanu Testnet
+
+`Verifier contract is deployed to  0x054429Cf1E1d2CBA1e2EE841b4D7f95205209446`
+
+`Virtual Accounts contract is deployed to :  0x12F85Dd36456088f46baD586923eF2eB13482bc3`
+
+`Connected Wallets contract is deployed to:  0xd14e897048cd38b9A1872959358B59A974FbACC1`
