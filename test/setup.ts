@@ -7,9 +7,19 @@ export async function setupTests() {
   );
   const Verifier = await verifierFactory.deploy();
   await Verifier.deployed();
-  const DirectDebitFactory = await ethers.getContractFactory("DirectDebit");
-  const directDebit = await DirectDebitFactory.deploy(Verifier.address);
-  await directDebit.deployed();
+  const VirtualAccountsFactory = await ethers.getContractFactory(
+    "VirtualAccounts",
+  );
+  const virtualAccounts = await VirtualAccountsFactory.deploy(Verifier.address);
+  await virtualAccounts.deployed();
+
+  const ConnectedWalletsFactory = await ethers.getContractFactory(
+    "ConnectedWallets",
+  );
+  const connectedWallets = await ConnectedWalletsFactory.deploy(
+    Verifier.address,
+  );
+  await connectedWallets.deployed();
 
   const MOCKERC20Factory = await ethers.getContractFactory("MOCKERC20");
   const MOCKERC20 = await MOCKERC20Factory.deploy();
@@ -20,8 +30,9 @@ export async function setupTests() {
     alice,
     bob,
     relayer,
-    directDebit,
+    virtualAccounts,
     MOCKERC20,
+    connectedWallets,
   };
 }
 

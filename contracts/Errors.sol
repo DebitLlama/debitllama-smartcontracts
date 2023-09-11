@@ -85,6 +85,21 @@ This error is thrown when an ETH top up msg.value is not balance
     Thrown if the commitment on a payment intent  history does not match the account commitment!
      */
     error CommitmentMismatch();
+
+    /**
+    Only owner can call this function!
+     */
+    error OnlyOwner();
+
+    /**
+    Thrown when an unsupported funciton is called in a child contract
+     */
+    error FunctionNotSupported();
+
+    /**
+     This error occurs when a Wallet Tries to connect with a zero address token!
+     */
+    error ZeroAddressConnected();
 }
 
 /**
@@ -143,4 +158,13 @@ interface DirectDebitEvents {
     Emitted when an account was closed
     */
     event AccountClosed(bytes32 indexed commitment);
+
+    /**
+    Emitted when a new wallet was connected!
+     */
+    event NewWalletConnected(
+        bytes32 indexed commitment,
+        address indexed creator,
+        address indexed token
+    );
 }
