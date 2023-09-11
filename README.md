@@ -16,7 +16,7 @@ PaymentIntent = hash(nullifier,nonce)
 
 The nonce is random.
 
-**To verify other public inputs** like payee, maxDebitAmount,debitTimes and debitInterval ***we use Hidden Signals** in the circuit. These signals are used to make sure that these parameters of the payment intent cannot be altered.
+**To verify other public inputs** like payee, maxDebitAmount,debitTimes and debitInterval **we use Hidden Signals** in the circuit. These signals are used to make sure that these parameters of the payment intent cannot be altered.
 
 ## How it works: Smart Contract
 
@@ -55,19 +55,25 @@ The underying direct debit contract exposes the following external functions:
 
 **Virtual Accounts**
 
-`depositEth` is used to create an account. The user computed the commitment off-chain and deposits value. The secret and the nullifier must be encrypted with with the wallet using the RPC call `eth_getEncryptionPublicKey` to get the key.  The crypto note is essentially saved on the chain so the users don't have to download a file. This was insipired by tornado cash note accounts which kind of do the same thing but with a work around for privacy. Here privacy is not a concern.
+`depositEth` is used to create an account. The user computed the commitment off-chain and deposits value. The secret and the nullifier must be encrypted first.
+
+The *crypto note* (an encoded format of the secret) is essentially saved on the chain so the users don't have to download it. This was insipired by tornado cash note accounts which kind of do the same thing but with a work around for privacy. Here privacy is not a concern.
 
 `depositToken` works the same way as depositEth but will need to pass the address of the ERC20 token also
 
 Accounts only work with a single kind of currency at once, so different currencies need different accounts.
 
-`topUpETH` will let the user top up their account, identified by the commitment and `topUpTokens` will do the same for ERC20 tokens.
+`topUpETH` will let the user top up their account, identified by the commitment 
+
+`topUpTokens` will do the same for ERC20 tokens.
 
 `withdraw` will let the account creator withdraw the deposited value and this will also close the account. 
 
 **Connected Wallets**
 
-`connectWallet` this function is used to connect an external wallet account to the smart contract using a commitment, the token to use for payments and the encrypted note.
+`connectWallet` is used to connect an external wallet account to the smart contract using a commitment, the token to use for payments and the encrypted note.
+
+ConnectedWallets only use ERC-20 tokens.
 
 `disconnectWallet` The owner of the wallet can disable the account and disconnect his wallet. Nullifying all future payments
 
@@ -75,7 +81,7 @@ Accounts only work with a single kind of currency at once, so different currenci
 
 To create accounts and payment intents, we use cryptography that is not included by default in the browser. 
 The `/lib` directory contains the code needed to do this.
-`directDebit.ts` and `directDebit.js` is identical, but the js was needed for more simple bundling configurations.
+`directDebit.ts` and `directDebit.js` is identical, but the js version was needed for more simple bundling configurations.
 To Bundle the code Rollup is used, it's building a minified iife that can be imported by the browser.
 You can run `npm run build-dep` to build the dependency or find the file commited in the repository at `directdebit_bundle.js`
 
@@ -94,7 +100,7 @@ I'm only going to mention some of the more important functions here
 
 `decryptData` will decrypt the encrypted data, but before it can do it we need to unpack it using `unpackEncryptedMessage`. The decryption uses an etherem wallet private key.
 
-The client must make sure to implement a symmetric encryption if it has no access to the wallet private key like this is done with DebitLlama where the ethereum key used to encrypt is supplied by the server, but the final decryption happens in the browser using a user supplied password. This way DebitLlama has zero access to the underlying secret at any time and creating payment intents and spending from a wallet is abstracted to just supplying a password!
+The client must make sure to implement a symmetric encryption if it has no access to the wallet private key like this is done with DebitLlama where the ethereum key used to encrypt is supplied by the server, but the final decryption happens in the browser using a user supplied password. This way DebitLlama has zero access to the underlying secret at any time and creating payment intents and spending from a wallet is abstracted to just supplying a password by the unserlying service!
 
 
 ## How to Run Tests
