@@ -55,6 +55,14 @@ describe("Test Connected Wallets", function () {
     expect(tokenAccountData.token).to.equal(MOCKERC20.address);
     expect(tokenAccountData.balance).to.equal(parseEther("0")); // There is no balance tracking for connected wallets
 
+    // testing  the getAccount view function!
+    const getAccountRes = await connectedWallets.getAccount(commitment);
+    expect(tokenAccountData.active).to.equal(getAccountRes.active);
+    expect(tokenAccountData.creator).to.equal(getAccountRes.creator);
+    expect(tokenAccountData.token).to.equal(getAccountRes.token);
+    expect(tokenAccountData.balance).to.not.equal(getAccountRes.balance); // There is no balance tracking for connected wallets
+    expect(getAccountRes.balance).to.equal(parseEther("1000"));
+
     // now create the payment intent
     const paymentIntent = await createPaymentIntent({
       paymentIntentSecret: {
@@ -89,6 +97,10 @@ describe("Test Connected Wallets", function () {
     expect(paymentIntentHistory.isNullified).to.equal(false);
 
     expect(paymentIntentHistory.withdrawalCount).to.equal(1);
+    // Testing the getAccount function balance calculation again!
+    const getAccountResAgain = await connectedWallets.getAccount(commitment);
+
+    expect(getAccountResAgain.balance).to.equal(parseEther("995"));
 
     // Now I disconnect the wallet!
 

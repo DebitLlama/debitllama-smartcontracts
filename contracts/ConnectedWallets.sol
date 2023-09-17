@@ -137,4 +137,33 @@ contract ConnectedWallets is DirectDebit {
         // verify the ZKP
         if (!_verifyProof(proof, hashes, payee, debit)) revert InvalidProof();
     }
+
+    /**
+    A view function to get and display the account's balance
+    This is useful when the account balance is calculated from external wallet's balance!
+     */
+    function getAccount(
+        bytes32 commitment
+    ) external view override returns (AccountData memory) {
+        AccountData memory accountdata = accounts[commitment];
+        uint256 allowance = IERC20(accountdata.token).allowance(
+            accountdata.creator,
+            address(this)
+        );
+        uint256 balance = IERC20(accountdata.token).balanceOf(
+            accountdata.creator
+        );
+
+        AccountData memory result;
+        result.active = accountdata.active;
+        result.creator = accountdata.creator;
+        result.token = accountdata.token;
+
+        if (allowance > balance) {
+            result.balance = balance;
+        } else {
+            result.balance = allowance;
+        }
+        return result;
+    }
 }

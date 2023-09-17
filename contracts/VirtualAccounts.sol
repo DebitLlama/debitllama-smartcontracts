@@ -219,4 +219,14 @@ contract VirtualAccounts is DirectDebit {
         // verify the ZKP
         if (!_verifyProof(proof, hashes, payee, debit)) revert InvalidProof();
     }
+
+
+    
+    /**
+    A view function to get and display the account's balance
+    This is useful when the account balance is calculated from external wallet's balance!
+     */
+    function getAccount(bytes32 commitment) external view override returns (AccountData memory){
+        return accounts[commitment];
+    }
 }

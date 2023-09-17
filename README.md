@@ -53,6 +53,8 @@ The underying direct debit contract exposes the following external functions:
 
 `updateFee` The owner of the contract can update how the fee is calculated
 
+`getAccount` A virtual view function to get the account. This is used instead of directly accessing the mapping. The child contracts override it use it to get account balance. When using connectedWallets the balance is calculated using the erc20 allowance and balance and not the stored value.
+
 **Virtual Accounts**
 
 `depositEth` is used to create an account. The user computed the commitment off-chain and deposits value. The secret and the nullifier must be encrypted first.
@@ -125,10 +127,10 @@ Until this is done the smart contracts are not ready for production.
 
 # Latest Deployments
 
-### Doanu Testnet
+### Doanu Testnet (latest)
 
-`Verifier contract is deployed to  0x054429Cf1E1d2CBA1e2EE841b4D7f95205209446`
+`Verifier contract is deployed to  0x22c025aa2009DfAbbc10F5262512A999D2a73E0d`
 
-`Virtual Accounts contract is deployed to :  0x12F85Dd36456088f46baD586923eF2eB13482bc3`
+`Virtual Accounts contract is deployed to :  0x870B0E3cf2c556dda20D3cB39e87145C21e8C023`
 
-`Connected Wallets contract is deployed to:  0xd14e897048cd38b9A1872959358B59A974FbACC1`
+`Connected Wallets contract is deployed to:  0x2E37877BB7645470cb5971110E9cA31D948D73a7`

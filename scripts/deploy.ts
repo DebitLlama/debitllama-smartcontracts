@@ -43,7 +43,7 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
-// DONAU TESTNET ADDRESSES:
-// Verifier contract is deployed to  0x054429Cf1E1d2CBA1e2EE841b4D7f95205209446
-// Virtual Accounts contract is deployed to :  0x12F85Dd36456088f46baD586923eF2eB13482bc3
-// Connected Wallets contract is deployed to:  0xd14e897048cd38b9A1872959358B59A974FbACC1
+// DONAU TESTNET ADDRESSES: (redeployed to use getAccount view function)
+// Verifier contract is deployed to  0x22c025aa2009DfAbbc10F5262512A999D2a73E0d
+// Virtual Accounts contract is deployed to :  0x870B0E3cf2c556dda20D3cB39e87145C21e8C023
+// Connected Wallets contract is deployed to:  0x2E37877BB7645470cb5971110E9cA31D948D73a7

@@ -250,4 +250,12 @@ abstract contract DirectDebit is
         address payee,
         uint256 payment
     ) internal virtual;
+
+    /**
+    A view function to get and display the account's balance
+    This is useful when the account balance is calculated from external wallet's balance!
+     */
+    function getAccount(
+        bytes32 commitment
+    ) external view virtual returns (AccountData memory);
 }

@@ -192,6 +192,14 @@ describe("Test Virtual Accounts!", function () {
     expect(tokenAccountData.token).to.equal(MOCKERC20.address);
     expect(tokenAccountData.balance).to.equal(parseEther("100"));
 
+    // testing the getAccount view function!
+
+    let getAccountDataRes = await virtualAccounts.getAccount(commitment);
+    expect(tokenAccountData.active).to.equal(getAccountDataRes.active);
+    expect(tokenAccountData.creator).to.equal(getAccountDataRes.creator);
+    expect(tokenAccountData.token).to.equal(getAccountDataRes.token);
+    expect(tokenAccountData.balance).to.equal(getAccountDataRes.balance);
+
     // Now top it up
 
     await virtualAccounts.connect(alice).topUpTokens(
