@@ -146,6 +146,17 @@ contract ConnectedWallets is DirectDebit {
         bytes32 commitment
     ) external view override returns (AccountData memory) {
         AccountData memory accountdata = accounts[commitment];
+        AccountData memory result;
+        result.active = accountdata.active;
+        result.creator = accountdata.creator;
+        result.token = accountdata.token;
+
+        // Deactivated accounts should have zero balance always!
+        if (!accountdata.active) {
+            result.balance = 0;
+            return result;
+        }
+
         uint256 allowance = IERC20(accountdata.token).allowance(
             accountdata.creator,
             address(this)
@@ -153,11 +164,6 @@ contract ConnectedWallets is DirectDebit {
         uint256 balance = IERC20(accountdata.token).balanceOf(
             accountdata.creator
         );
-
-        AccountData memory result;
-        result.active = accountdata.active;
-        result.creator = accountdata.creator;
-        result.token = accountdata.token;
 
         if (allowance > balance) {
             result.balance = balance;

@@ -133,4 +133,4 @@ Until this is done the smart contracts are not ready for production.
 
 `Virtual Accounts contract is deployed to :  0x870B0E3cf2c556dda20D3cB39e87145C21e8C023`
 
-`Connected Wallets contract is deployed to:  0x2E37877BB7645470cb5971110E9cA31D948D73a7`
+`Connected Wallets contract is deployed to:  0x870B0E3cf2c556dda20D3cB39e87145C21e8C023`
