@@ -53,6 +53,8 @@ The underying direct debit contract exposes the following external functions:
 
 `updateFee` The owner of the contract can update how the fee is calculated
 
+`togglePause` The owner of the contract can halt all pull payments from the contract as a safety mechanism, suspicious transactions can be automaticly detected.
+
 `getAccount` A virtual view function to get the account. This is used instead of directly accessing the mapping. The child contracts override it use it to get account balance. When using connectedWallets the balance is calculated using the erc20 allowance and balance and not the stored value.
 
 **Virtual Accounts**

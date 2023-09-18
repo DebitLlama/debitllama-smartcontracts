@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -48,7 +49,8 @@ interface IVerifier {
 abstract contract DirectDebit is
     ReentrancyGuard,
     DirectDebitErrors,
-    DirectDebitEvents
+    DirectDebitEvents,
+    Pausable
 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -123,6 +125,22 @@ abstract contract DirectDebit is
     }
 
     /**
+      The Owner can pause and unpause the contract to stop pull payments from it, the withdrawals and wallet disconnecting will still work!
+      This is a safety mechanism, in the event of a decryption key leak, an attacker will be able to decrypt the asymmetric encrypted crypto notes,
+      However the attacker still needs time to brute force passwords and won't be able to drain balances fast!
+      The owner of the smart contract can pause all directdebit and let the account creators disconnect/withdraw their funds.
+      Incidents/unauthorized access can be detected automaticly as successful directdebit transactions not sent by the relayer.
+     */
+    function togglePause() external {
+        if (msg.sender != _owner) revert OnlyOwner();
+        if (paused()) {
+            _unpause();
+        } else {
+            _pause();
+        }
+    }
+
+    /**
       A function that allows direct debit with a reusable proof
       N times to M address with L max amount that can be withdrawn
       The proof and public inputs are the PaymentIntent
@@ -133,13 +151,14 @@ abstract contract DirectDebit is
       Last param is not used in the circuit but it must be smaller than the max debit amount
       By using a separate max debit amount and a payment amount we can create dynamic subscriptions, where the final price varies 
       but can't be bigger than the allowed amount!
+      This function can be paused by the owner to disable it!
     */
     function directdebit(
         uint256[8] calldata proof,
         bytes32[2] calldata hashes,
         address payee,
         uint256[4] calldata debit
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         _verifyPaymentIntent(proof, hashes, payee, debit);
         _processPaymentIntent(hashes, payee, debit);
     }
