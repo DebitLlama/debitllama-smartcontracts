@@ -18,6 +18,13 @@ contract ConnectedWallets is DirectDebit {
     constructor(IVerifier _verifier) DirectDebit(_verifier) {}
 
     /**
+      A mapping to store if a wallet was connected already with the same token to avoid creating 2 connected wallets. 
+      This is useful, because 2 connected wallets with the same address and tokens have the same balance also anyways.
+      The key is keccak256(creator,token)
+     */
+    mapping(bytes32 => bool) public connectedWalletAlready;
+
+    /**
       @dev  Connect an external wallet to create an account that allows directly debiting it!
       @param _commitment is the poseidon hash of the note
       @param token is the ERC20 token that is used for transactions, the connected wallet must approve allowance!
@@ -35,6 +42,13 @@ contract ConnectedWallets is DirectDebit {
             revert AccountAlreadyExists();
 
         if (token == (address(0))) revert ZeroAddressConnected();
+
+        bytes32 connectedHash = getHashByAddresses(msg.sender, token);
+
+        if (connectedWalletAlready[connectedHash])
+            revert WalletAlreadyConnected();
+
+        connectedWalletAlready[connectedHash] = true;
 
         // A convenience mapping to fetch the commitments by address to access accounts later!
         commitments[msg.sender][accountCounter[msg.sender]] = _commitment;
@@ -65,6 +79,12 @@ contract ConnectedWallets is DirectDebit {
             revert OnlyAccountOwner();
 
         accounts[commitment].active = false;
+
+        bytes32 connectedHash = getHashByAddresses(
+            accounts[commitment].creator,
+            address(accounts[commitment].token)
+        );
+        connectedWalletAlready[connectedHash] = false;
         emit AccountClosed(commitment);
     }
 
@@ -171,5 +191,15 @@ contract ConnectedWallets is DirectDebit {
             result.balance = allowance;
         }
         return result;
+    }
+
+    /**
+     This is used with the connectedWalletAlready mapping to access it. Pass in addresses and get the hash!
+     */
+    function getHashByAddresses(
+        address _creator,
+        address _token
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_creator, _token));
     }
 }

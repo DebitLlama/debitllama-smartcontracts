@@ -126,4 +126,51 @@ describe("Test Connected Wallets", function () {
     let acc = await connectedWallets.accounts(commitment);
     expect(acc.active).to.be.false;
   });
+  it("Test connecting a wallet twice", async function () {
+    const { owner, alice, bob, relayer, connectedWallets, MOCKERC20 } =
+      await setupTests();
+
+    await MOCKERC20.mint(alice.address, parseEther("1000"));
+
+    // Alice approves the ConnectedWallet to spend her allowance!
+    // This lets the contract directly debit her account!
+    await MOCKERC20.connect(alice).approve(
+      connectedWallets.address,
+      parseEther("1000"),
+    );
+
+    //Gonna create a new account
+    // Gonna deposit tokens and create a token account
+    const tokenAccountNote = newAccountSecrets();
+    const accountSecrets = decodeAccountSecrets(tokenAccountNote);
+    const tokenAccountCommitment = toNoteHex(accountSecrets.commitment);
+    // The note here is not encrypted. That will be done on the client!
+
+    await connectedWallets.connect(alice).connectWallet(
+      tokenAccountCommitment,
+      MOCKERC20.address,
+      tokenAccountNote,
+    );
+
+    let errorOccured = false;
+    let errorMessage = "";
+
+    const tokenAccountNote2 = newAccountSecrets();
+    const accountSecrets2 = decodeAccountSecrets(tokenAccountNote2);
+    const tokenAccountCommitment2 = toNoteHex(accountSecrets2.commitment);
+
+    try {
+      await connectedWallets.connect(alice).connectWallet(
+        tokenAccountCommitment2,
+        MOCKERC20.address,
+        tokenAccountNote,
+      );
+      console.log("connected a wallet twice?");
+    } catch (err: any) {
+      errorOccured = true;
+      errorMessage = err.message;
+    }
+    expect(errorOccured).to.be.true;
+    expect(errorMessage.includes("WalletAlreadyConnected")).to.be.true;
+  });
 });

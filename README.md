@@ -81,6 +81,11 @@ ConnectedWallets only use ERC-20 tokens.
 
 `disconnectWallet` The owner of the wallet can disable the account and disconnect his wallet. Nullifying all future payments
 
+`connectedWalletAlready` Is a mapping (bytes32 => bool) to check if a wallet connected already to disallow wallets connecting twice to the same smart contarct with the same tokens.
+Each smart contract manages 1 connected wallet per token!
+
+`getHashByAddresses` is a pure function to calculate a keccak256 hash from 2 addresses, a wallet address and a token contract address. This is used to access connectedWalletAlready mapping!
+
 ## Client Side 
 
 To create accounts and payment intents, we use cryptography that is not included by default in the browser. 

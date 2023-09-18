@@ -100,6 +100,11 @@ This error is thrown when an ETH top up msg.value is not balance
      This error occurs when a Wallet Tries to connect with a zero address token!
      */
     error ZeroAddressConnected();
+
+    /**
+    This error occurs when a wallet tries to connect twice with the the same tokens. That doesn't work.
+     */
+    error WalletAlreadyConnected();
 }
 
 /**
