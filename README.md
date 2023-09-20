@@ -135,9 +135,6 @@ Until this is done the smart contracts are not ready for production.
 # Latest Deployments
 
 ### Doanu Testnet (latest)
-
-`Verifier contract is deployed to  0x22c025aa2009DfAbbc10F5262512A999D2a73E0d`
-
-`Virtual Accounts contract is deployed to :  0x870B0E3cf2c556dda20D3cB39e87145C21e8C023`
-
-`Connected Wallets contract is deployed to:  0xaB9ADa67294C7f5F4690f23CEaEc4Ec6c4B14976`
+`Verifier contract is deployed to  0xA0c953Db12f02e0E8f41EFd5Ea857259a694069d`
+`Virtual Accounts contract is deployed to :  0x2137F4096365bCA1457E945838e0d7EC1925A973`
+`Connected Wallets contract is deployed to:  0xc65DDA2E81dB71C998D08A525D70dFA844BF5D3e`
