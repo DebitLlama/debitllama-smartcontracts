@@ -7,7 +7,23 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Errors.sol";
+
+
+//   o__ __o         o                                        o           o__ __o                     o             o     o     
+//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>    
+//  / \     <\                                               < >         / \     <\                  / >                 < >    
+//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |     
+//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_ 
+//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |     
+//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |     
+//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o     
+//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__  
+                                                                                                                             
+                                                                                                                             
+                                                                                                                             
+
 
 // This contract  implements direct debit using crypto notes
 // The user can create a Note off-chain that is stored encrypted inside the smart contract
@@ -50,14 +66,13 @@ abstract contract DirectDebit is
     ReentrancyGuard,
     DirectDebitErrors,
     DirectDebitEvents,
-    Pausable
+    Pausable,
+    Ownable
 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     IVerifier public immutable verifier; // The verifier address
-
-    address payable public _owner; // The owner of the contract that can update the feeless token's address
 
     /**
      1% fee sent to the deployer of this contract on all transactions. 
@@ -87,9 +102,8 @@ abstract contract DirectDebit is
     mapping(bytes32 => AccountData) public accounts;
 
     /*
-       The Secret notes are encrypted and stored on-chain
-       This feature relies on metamask. The note was encrypted with the public key aquired with eth_getEncryptionPublicKey
-       Decryption requires the use of eth_decrypt on the client
+       The Secret notes are encrypted and stored on-chain, Insipred by Tornado Cash note accounts
+       The note's are encrypted with symmetric and asymmetric encryption before stored on chain using a password and an identity provider's public key.
        These notes are used to compute the ZKP (Payment Intent) off-chain that can be used to debit an account
     */
     mapping(bytes32 => string) public encryptedNotes;
@@ -101,7 +115,6 @@ abstract contract DirectDebit is
 
     constructor(IVerifier _verifier) {
         verifier = _verifier;
-        _owner = payable(msg.sender);
     }
 
     /**
@@ -119,8 +132,7 @@ abstract contract DirectDebit is
        @dev update the fee calculation
        @param newFeeDivider is the variable used for calculating the fee
      */
-    function updateFee(uint256 newFeeDivider) external {
-        if (msg.sender != _owner) revert OnlyOwner();
+    function updateFee(uint256 newFeeDivider) external onlyOwner {
         ownerFeeDivider = newFeeDivider;
     }
 
@@ -131,8 +143,7 @@ abstract contract DirectDebit is
       The owner of the smart contract can pause all directdebit and let the account creators disconnect/withdraw their funds.
       Incidents/unauthorized access can be detected automaticly as successful directdebit transactions not sent by the relayer.
      */
-    function togglePause() external {
-        if (msg.sender != _owner) revert OnlyOwner();
+    function togglePause() external onlyOwner {
         if (paused()) {
             _unpause();
         } else {
@@ -239,12 +250,12 @@ abstract contract DirectDebit is
         // Process the withdraw
         if (address(accounts[hashes[1]].token) != address(0)) {
             _processTokenWithdraw(hashes[1], payee, payment);
-            _processTokenWithdraw(hashes[1], _owner, ownerFee);
+            _processTokenWithdraw(hashes[1], payable(owner()), ownerFee);
         } else {
             // Transfer the eth
             _processEthWithdraw(hashes[1], payee, payment);
             // Send the fee to the owner
-            _processEthWithdraw(hashes[1], _owner, ownerFee);
+            _processEthWithdraw(hashes[1], payable(owner()), ownerFee);
         }
 
         emit AccountDebited(hashes[1], payee, payment);
