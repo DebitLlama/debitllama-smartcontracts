@@ -3,6 +3,16 @@ pragma solidity ^0.8.0;
 import "./DirectDebit.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+//   o              o     o                o                                 o               o                                                                      o
+//  <|>            <|>  _<|>_             <|>                               <|>             <|>                                                                    <|>
+//  < >            < >                    < >                               / \             / \                                                                    < >
+//   \o            o/     o    \o__ __o    |       o       o      o__ __o/  \o/           o/   \o           __o__      __o__    o__ __o     o       o   \o__ __o    |
+//    v\          /v     <|>    |     |>   o__/_  <|>     <|>    /v     |    |           <|__ __|>         />  \      />  \    /v     v\   <|>     <|>   |     |>   o__/_
+//     <\        />      / \   / \   < >   |      < >     < >   />     / \  / \          /       \       o/         o/        />       <\  < >     < >  / \   / \   |
+//       \o    o/        \o/   \o/         |       |       |    \      \o/  \o/        o/         \o    <|         <|         \         /   |       |   \o/   \o/   |
+//        v\  /v          |     |          o       o       o     o      |    |        /v           v\    \\         \\         o       o    o       o    |     |    o
+//         <\/>          / \   / \         <\__    <\__ __/>     <\__  / \  / \      />             <\    _\o__</    _\o__</   <\__ __/>    <\__ __/>   / \   / \   <\__
+
 // This contract implements the direct debit from virtual accounts
 // The accounts support ETH and ERC-20 tokens
 // The accounts need to be topped up and manually and they can be closed by the wallet that created them!
@@ -220,13 +230,13 @@ contract VirtualAccounts is DirectDebit {
         if (!_verifyProof(proof, hashes, payee, debit)) revert InvalidProof();
     }
 
-
-    
     /**
     A view function to get and display the account's balance
     This is useful when the account balance is calculated from external wallet's balance!
      */
-    function getAccount(bytes32 commitment) external view override returns (AccountData memory){
+    function getAccount(
+        bytes32 commitment
+    ) external view override returns (AccountData memory) {
         return accounts[commitment];
     }
 }

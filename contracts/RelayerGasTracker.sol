@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 // A helper smart contract to send the relayer gas
 // This is used to fund transaction relaying.
 // The relayer tracks the submitted transactions externally but uses this convenience contract to trigger on deposit events
+// The relayer is operated by the DebitLlama service. It is a centralized relayer.
 
 contract RelayerGasTracker is Ownable {
     using SafeMath for uint256;

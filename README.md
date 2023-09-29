@@ -1,5 +1,6 @@
 # Direct Debit Using Note Accounts
 
+                                                                                                                                        
 This repository contaisn the implementation of a direct debit system that allows merchants to pull payments from accounts using zksnarks created by customers off-chain. The core of the direct debit implementation can be found in DirectDebit.sol, while the child contracts implement different account types.
 
 ## How it works: Circuits
@@ -127,8 +128,8 @@ Configure hardhat.config.ts with the network and run the deploy script
 The repository contains other contracts used by DebitLlama like the *RelayerGasTracker*.
 This is a simple convenience contract that allows depositing gas to a relayer, instead of sending a transaction directly we use a smart contract for this to store the top up history. `TopUpEvent` events are emitted that can be fetched by a relayer to process top up transactions to it using contract calls.
 
-# Important Note
-Currently the Phase 2 ceremony for the circuits are unfinished as there were no contributions,yet. We will host the ceremony at snarkyceremonies.com where anyone can contribute with some entropy and help secure our circuits and smart contracts!
+# Trusted Setup
+Currently the Phase 2 ceremony for the circuits are unfinished. We are hosting the ceremony at snarkyceremonies.com where anyone can contribute with some entropy and help secure our circuits and smart contracts!
 
 Until this is done the smart contracts are not ready for production.
 
@@ -138,3 +139,17 @@ Until this is done the smart contracts are not ready for production.
 `Verifier contract is deployed to  0xA0c953Db12f02e0E8f41EFd5Ea857259a694069d`
 `Virtual Accounts contract is deployed to :  0x2137F4096365bCA1457E945838e0d7EC1925A973`
 `Connected Wallets contract is deployed to:  0xc65DDA2E81dB71C998D08A525D70dFA844BF5D3e`
+
+
+# Experimental
+
+## Extractable Fee
+The experimental directory contains contracts to allow searchers to extract fee for solving an intent, which would allow anyone to participate in the protocol.
+
+The searchers must be whitelisted per payment intent, which is authorized by a signer via EIP712 signatures
+
+The code in this directory is untested
+### DirectDebitWithMEV
+This is a variation of the Direct Debit contract that will allow pull payments only from whitelisted addresses and and adds an extra fee.
+
+*A Note to self: ascii art in the code generated with https://textkool.com/en/ascii-art-generator, Acrobatic font*
