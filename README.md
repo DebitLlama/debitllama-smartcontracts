@@ -140,16 +140,3 @@ Until this is done the smart contracts are not ready for production.
 `Virtual Accounts contract is deployed to :  0x2137F4096365bCA1457E945838e0d7EC1925A973`
 `Connected Wallets contract is deployed to:  0xc65DDA2E81dB71C998D08A525D70dFA844BF5D3e`
 
-
-# Experimental
-
-## Extractable Fee
-The experimental directory contains contracts to allow searchers to extract fee for solving an intent, which would allow anyone to participate in the protocol.
-
-The searchers must be whitelisted per payment intent, which is authorized by a signer via EIP712 signatures
-
-The code in this directory is untested
-### DirectDebitWithMEV
-This is a variation of the Direct Debit contract that will allow pull payments only from whitelisted addresses and and adds an extra fee.
-
-*A Note to self: ascii art in the code generated with https://textkool.com/en/ascii-art-generator, Acrobatic font*
