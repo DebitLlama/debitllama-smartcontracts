@@ -41,7 +41,7 @@ export async function createPaymentIntent(
   if (!snarkArtifacts) {
     snarkArtifacts = {
       wasmFilePath: `circuits/directDebit/directDebit_js/directDebit.wasm`,
-      zkeyFilePath: `circuits/directDebit/directDebit_0001.zkey`,
+      zkeyFilePath: `circuits/directDebit/directDebit_final.zkey`,
     };
   }
 
