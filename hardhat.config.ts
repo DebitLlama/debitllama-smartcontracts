@@ -30,12 +30,18 @@ const config: HardhatUserConfig = {
     //   accounts:
     //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     // },
-    // donau: {
-    //   url: process.env.BTT_DONAU_TESTNET_API || "",
-    //   accounts: process.env.DEPLOY_KEY !== undefined
-    //     ? [process.env.DEPLOY_KEY]
-    //     : [],
-    // },
+    donau: {
+      url: process.env.BTT_DONAU_TESTNET_API || "",
+      accounts: process.env.DEPLOY_KEY !== undefined
+        ? [process.env.DEPLOY_KEY]
+        : [],
+    },
+    bttmainnet: {
+      url: process.env.BTT_MAINNET_API || "",
+      accounts: process.env.DEPLOY_KEY !== undefined
+        ? [process.env.DEPLOY_KEY]
+        : [],
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

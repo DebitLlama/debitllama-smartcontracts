@@ -165,3 +165,7 @@ And finally the verifier was copied to the contracts library
 `Virtual Accounts contract is deployed to :  0x2137F4096365bCA1457E945838e0d7EC1925A973`
 `Connected Wallets contract is deployed to:  0xc65DDA2E81dB71C998D08A525D70dFA844BF5D3e`
 
+### BTT MAINNET ADDRESSES
+`Verifier contract is deployed to  0xeAE2159594fB8e10D1bF188B44A04805161e05E6`
+`Virtual Accounts contract is deployed to :  0x6C0a407fa33f8d73Cd0bD576D6D2c4A935554E97`
+`Connected Wallets contract is deployed to:  0x8722F4871e47F9E9e205bB3943F594D8cA3EdBfa`
