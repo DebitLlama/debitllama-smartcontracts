@@ -28,7 +28,7 @@ async function main() {
         "ConnectedWallets",
       );
       const connectedWallets = await ConnectedWalletsFactory.deploy(
-        "0x22c025aa2009DfAbbc10F5262512A999D2a73E0d",
+        Verifier.address,
       );
       await connectedWallets.deployed();
 
@@ -46,6 +46,6 @@ main().catch((error) => {
 });
 
 // DONAU TESTNET ADDRESSES: (redeployed with finalized circuit)
-// Verifier contract is deployed to  0xde8E09BC372EE26Bb25A1e7325FceF5af523281C
-// Virtual Accounts contract is deployed to :  0xb66adC34cb968bB67cC7656fA3Aba875a322FF35
-// Connected Wallets contract is deployed to:  0x59b3202ed8C7e2459FA9c6e9592e9Dae671644A5
+// Verifier contract is deployed to  0x6d387f7b1f062e82B29aC4185e547a3fE4805fC7
+// Virtual Accounts contract is deployed to :  0xF75515Df5AC843a8B261E232bB890dc2F75A4066
+// Connected Wallets contract is deployed to:  0x9c85da9E45126Fd45BC62656026A2E7226bba239
