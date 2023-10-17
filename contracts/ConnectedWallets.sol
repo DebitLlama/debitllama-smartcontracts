@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "./DirectDebit.sol";
+import "./Errors.sol";
 
 
 //       o__ __o         o__ __o        o          o    o          o    o__ __o__/_       o__ __o    ____o__ __o____   o__ __o__/_   o__ __o            o__ __o__/_       o__ __o               o               o              o           o           o            o            o__ __o__/_  ____o__ __o____ 

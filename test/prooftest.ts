@@ -28,11 +28,24 @@ describe("Test the circom circuit", function () {
       "circuits/directDebit/verification_key.json",
       "utf-8",
     );
+
     const verificationKey = JSON.parse(verificationKeyFile);
     const res = await verifySixPublicSignals(verificationKey, {
       proof,
       publicSignals,
     });
     expect(res).to.be.true;
+    const res2 = await verifySixPublicSignals(verificationKey, {
+      proof,
+      publicSignals: [
+        publicSignals[0],
+        publicSignals[1],
+        publicSignals[2],
+        publicSignals[3],
+        publicSignals[4],
+        "11",
+      ],
+    });
+    expect(res2).to.be.false;
   });
 });
