@@ -129,9 +129,34 @@ The repository contains other contracts used by DebitLlama like the *RelayerGasT
 This is a simple convenience contract that allows depositing gas to a relayer, instead of sending a transaction directly we use a smart contract for this to store the top up history. `TopUpEvent` events are emitted that can be fetched by a relayer to process top up transactions to it using contract calls.
 
 # Trusted Setup
-Currently the Phase 2 ceremony for the circuits are unfinished. We are hosting the ceremony at snarkyceremonies.com where anyone can contribute with some entropy and help secure our circuits and smart contracts!
+The project uses the Polygon Hermez ptau file
 
-Until this is done the smart contracts are not ready for production.
+The phase-2 ceremony was done using snarkyceremonies.com with anonymous contributors!
+
+snarkjs zkey verify ./circuits/directDebit/directDebit.r1cs ./circuits/powersOfTau28_hez_final_15.ptau  ./circuits/directDebit/directDebit_0010.zkey 
+
+### Adding a random beacon
+
+For the beacon, I chose to use bitcoin block hash 812650
+`00000000000000000002863dc27bf05659898e74dcb5e20167a16d71d1024612`
+
+`snarkjs zkey beacon directDebit_0010.zkey directDebit_final.zkey 00000000000000000002863dc27bf05659898e74dcb5e20167a16d71d1024612 10 -n="Final Beacon Phase 2 DirectDebit Mainnet is Ready :)"`
+
+Verify the final zkey 
+`snarkjs zkey verify directDebit.r1cs ../powersOfTau28_hez_final_15.ptau directDebit_final.zkey`
+
+Export the verification key:
+
+`snarkjs zkey export verificationkey directDebit_final.zkey verification_key.json`
+
+Export the verifier smart contract
+
+`snarkjs zkey export solidityverifier directDebit_final.zkey PaymentIntentVerifier.sol`
+
+And finally the verifier was copied to the contracts library
+
+`mv PaymentIntentVerifier.sol ../../contracts/PaymentIntentVerifier.sol`
+
 
 # Latest Deployments
 
