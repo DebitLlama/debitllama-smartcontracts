@@ -23,29 +23,38 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.4",
+  solidity: {
+    version: "0.8.4",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000,
+      },
+    },
+  },
   networks: {
     // ropsten: {
     //   url: process.env.ROPSTEN_URL || "",
     //   accounts:
     //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     // },
-    donau: {
-      url: process.env.BTT_DONAU_TESTNET_API || "",
-      accounts: process.env.DEPLOY_KEY !== undefined
-        ? [process.env.DEPLOY_KEY]
-        : [],
-    },
-    bttmainnet: {
-      url: process.env.BTT_MAINNET_API || "",
-      accounts: process.env.DEPLOY_KEY !== undefined
-        ? [process.env.DEPLOY_KEY]
-        : [],
-    },
+    // donau: {
+    //   url: process.env.BTT_DONAU_TESTNET_API || "",
+    //   accounts: process.env.DEPLOY_KEY !== undefined
+    //     ? [process.env.DEPLOY_KEY]
+    //     : [],
+    // },
+    // bttmainnet: {
+    //   url: process.env.BTT_MAINNET_API || "",
+    //   accounts: process.env.DEPLOY_KEY !== undefined
+    //     ? [process.env.DEPLOY_KEY]
+    //     : [],
+    // },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: true,
     currency: "USD",
+    gasPrice: 21,
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
