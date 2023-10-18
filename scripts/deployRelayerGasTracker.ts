@@ -11,13 +11,16 @@ async function deploy() {
 async function setRelayer() {
   const contract = await ethers.getContractAt(
     "RelayerGasTracker",
-    "0x3e4E07926c1c4AC9f29539E385fBbF700b49F221",
+    "0x8c142b126fad0E0553aA1d4c84Ae33eA5FcBF0C5",
   );
+
   const res = await contract.setRelayer(
-    "0x71A713135d57911631Bb54259026Eaa030F7B881",
+    "0xaaCb9bf503Dfb3A8a77BB5c459f45f495B7ad392",
   );
-  await res.wait().then((receipt) => {
+  await res.wait().then(async (receipt) => {
     console.log("Finished with status : ", receipt.status);
+    const relayer = await contract.relayer();
+    console.log(relayer);
   });
 }
 
@@ -34,3 +37,4 @@ main().catch((error) => {
 });
 
 // Relayer Gas tracker is deployed to :  0x3e4E07926c1c4AC9f29539E385fBbF700b49F221 on Donau Testnet
+// Relayer Gas tracker is deployed to :  0x8c142b126fad0E0553aA1d4c84Ae33eA5FcBF0C5 on BTT Mainnet
