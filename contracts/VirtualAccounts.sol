@@ -66,7 +66,7 @@ contract VirtualAccounts is DirectDebit {
     }
 
     /**
-   @dev : depositToken is for creating a bunnyNote by depositing tokens, the wallet calling this function must approve ERC20 spend first
+   @dev : depositToken is for creating an account by depositing tokens, the wallet calling this function must approve ERC20 spend first
    @param _commitment is the poseidon hash of the note
    @param balance is the amount of token transferred to the contract that represents the note's value. balance does not contain the fee
    @param token is the ERC20 token that is used for this deposits  
