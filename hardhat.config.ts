@@ -7,6 +7,8 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 
+import "hardhat-abi-exporter";
+
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -58,6 +60,10 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  abiExporter: {
+    path: "./data/abi",
+    pretty: false,
   },
 };
 

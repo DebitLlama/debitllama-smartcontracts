@@ -1,0 +1,102 @@
+[
+  {
+    "inputs": [],
+    "name": "AccountAlreadyActive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AccountAlreadyExists",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CommitmentMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EarlyPaymentNotAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FunctionNotSupported",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InactiveAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidProof",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEnoughAccountBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEnoughValue",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEthAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotTokenAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyAccountOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyRelatedPartiesCanCancel",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PaymentIntentExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PaymentIntentNullified",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PaymentNotAuthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WalletAlreadyConnected",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddressConnected",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroTopup",
+    "type": "error"
+  }
+]
