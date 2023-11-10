@@ -170,3 +170,9 @@ And finally the verifier was copied to the contracts library
 `Verifier contract is deployed to  0x5e93788886D8712C0cDe623fB22dCf979ed07724`
 `Virtual Accounts contract is deployed to :  0xc4Cf42D5a6F4F061cf5F98d0338FC5913b6fF581`
 `Connected Wallets contract is deployed to:  0xF9962f3C23De4e864E56ef29125D460c785905c6`
+
+
+### ABIGEN
+Go contract bindings were generated like:
+
+`abigen --abi VirtualAccounts.json --pkg eth --type VirtualAccounts --out VirtualAccounts.go`
