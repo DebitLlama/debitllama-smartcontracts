@@ -223,7 +223,7 @@ describe("Test Virtual Accounts!", function () {
 
     expect(await MOCKERC20.balanceOf(bob.address)).to.equal(parseEther("0"));
 
-    await virtualAccounts.connect(alice).directdebit(
+    await virtualAccounts.connect(relayer).directdebit(
       packToSolidityProof(paymentIntent.proof),
       [
         toNoteHex(paymentIntent.publicSignals[0]),
@@ -252,7 +252,7 @@ describe("Test Virtual Accounts!", function () {
     let errorOccured = false;
     let errorMessage = "";
     try {
-      await virtualAccounts.connect(alice).directdebit(
+      await virtualAccounts.connect(relayer).directdebit(
         packToSolidityProof(paymentIntent.proof),
         [
           toNoteHex(paymentIntent.publicSignals[0]),

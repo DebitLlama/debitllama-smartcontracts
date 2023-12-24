@@ -25,6 +25,12 @@ export async function setupTests() {
   const MOCKERC20 = await MOCKERC20Factory.deploy();
   await MOCKERC20.deployed();
 
+  await virtualAccounts.approveRelayer(relayer.address, true);
+  await connectedWallets.approveRelayer(relayer.address, true);
+  await virtualAccounts.approveRelayer(owner.address, true);
+  await connectedWallets.approveRelayer(owner.address, true);
+
+
   return {
     owner,
     alice,

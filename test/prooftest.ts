@@ -4,6 +4,7 @@ import {
   createPaymentIntent,
   decodeAccountSecrets,
   newAccountSecrets,
+  toNoteHex,
   verifySixPublicSignals,
 } from "../lib/directDebit";
 export const ZEROADDRESS = "0x0000000000000000000000000000000000000000";
@@ -47,5 +48,13 @@ describe("Test the circom circuit", function () {
       ],
     });
     expect(res2).to.be.false;
+
+    const origin = "16000534653676138996713327308904050705310694920288652176050461465752592825931";
+    const want ="0x235ffb4f845bec7dcb1fffbd82391cecbc278bca9187fbcd7cddf854fed5be4b"
+    const got = toNoteHex(origin);
+    expect(want).to.equal(got);
+
+
   });
 });
+
