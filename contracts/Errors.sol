@@ -105,6 +105,11 @@ This error is thrown when an ETH top up msg.value is not balance
     This error occurs when a wallet tries to connect twice with the the same tokens. That doesn't work.
      */
     error WalletAlreadyConnected();
+
+    /**
+    This error occurs on direct debit if the relayer was not approved
+     */
+    error OnlyApprovedRelayer();
 }
 
 /**

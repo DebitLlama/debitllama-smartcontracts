@@ -10,20 +10,15 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Errors.sol";
 
-
-//   o__ __o         o                                        o           o__ __o                     o             o     o     
-//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>    
-//  / \     <\                                               < >         / \     <\                  / >                 < >    
-//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |     
-//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_ 
-//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |     
-//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |     
-//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o     
-//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__  
-                                                                                                                             
-                                                                                                                             
-                                                                                                                             
-
+//   o__ __o         o                                        o           o__ __o                     o             o     o
+//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>
+//  / \     <\                                               < >         / \     <\                  / >                 < >
+//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |
+//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_
+//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |
+//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |
+//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o
+//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__
 
 // This contract  implements direct debit using crypto notes
 // The user can create a Note off-chain that is stored encrypted inside the smart contract
@@ -108,6 +103,12 @@ abstract contract DirectDebit is
     */
     mapping(bytes32 => string) public encryptedNotes;
 
+    /*
+      The relayers approved to call DirectDebit, this was added for the AVAX deployment
+     */
+
+    mapping(address => bool) public approvedRelayers;
+
     /**
         @dev : the constructor
         @param _verifier is the address of SNARK verifier contract        
@@ -152,6 +153,13 @@ abstract contract DirectDebit is
     }
 
     /**
+     The owner must approve a relayer to call direct debit. This is an extra security layer added to the contracts
+     */
+    function approveRelayer(address _addr, bool setTo) external onlyOwner {
+        approvedRelayers[_addr] = setTo;
+    }
+
+    /**
       A function that allows direct debit with a reusable proof
       N times to M address with L max amount that can be withdrawn
       The proof and public inputs are the PaymentIntent
@@ -170,6 +178,7 @@ abstract contract DirectDebit is
         address payee,
         uint256[4] calldata debit
     ) external nonReentrant whenNotPaused {
+        if (!approvedRelayers[msg.sender]) revert OnlyApprovedRelayer();
         _verifyPaymentIntent(proof, hashes, payee, debit);
         _processPaymentIntent(hashes, payee, debit);
     }
