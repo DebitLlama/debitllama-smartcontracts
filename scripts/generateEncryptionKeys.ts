@@ -8,6 +8,7 @@ async function main() {
     wallet.privateKey.substring(2),
   );
   console.log("Generated private key : ", wallet.privateKey);
+  console.log("Generatex public key: ", await wallet.getAddress());
   console.log("Generated Encryption public key: ", encryptionPublicKey);
 }
 
