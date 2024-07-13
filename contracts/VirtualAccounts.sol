@@ -217,6 +217,11 @@ contract VirtualAccounts is DirectDebit {
         // The authorized amount must be bigger or equal than the amount withdrawn!
         if (debit[0] < debit[3]) revert PaymentNotAuthorized();
 
+        //If the payment is dynamic, the only approve intent solver is the payee
+        if (debit[0] != debit[3]) {
+            if (msg.sender != payee) revert OnlyApprovedRelayer();
+        }
+
         // The account has insufficient balance to continue
         if (debit[3] > accounts[hashes[1]].balance)
             revert NotEnoughAccountBalance();

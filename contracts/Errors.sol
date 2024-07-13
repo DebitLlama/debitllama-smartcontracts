@@ -107,7 +107,7 @@ This error is thrown when an ETH top up msg.value is not balance
     error WalletAlreadyConnected();
 
     /**
-    This error occurs on direct debit if the relayer was not approved
+    This error occurs on direct debit if the payment is dynamic, the only approved relayer is the payee
      */
     error OnlyApprovedRelayer();
 }

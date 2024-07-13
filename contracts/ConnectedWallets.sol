@@ -3,19 +3,15 @@ pragma solidity ^0.8.0;
 import "./DirectDebit.sol";
 import "./Errors.sol";
 
-
-//       o__ __o         o__ __o        o          o    o          o    o__ __o__/_       o__ __o    ____o__ __o____   o__ __o__/_   o__ __o            o__ __o__/_       o__ __o               o               o              o           o           o            o            o__ __o__/_  ____o__ __o____ 
-//      /v     v\       /v     v\      <|\        <|>  <|\        <|>  <|    v           /v     v\    /   \   /   \   <|    v       <|     v\          <|    v           /v     v\             <|>             <|>            <|>         <|>         <|>          <|>          <|    v        /   \   /   \  
-//     />       <\     />       <\     / \\o      / \  / \\o      / \  < >              />       <\        \o/        < >           / \     <\         < >              />       <\            / \             / \            / \         / \         / \          / \          < >                 \o/       
-//   o/              o/           \o   \o/ v\     \o/  \o/ v\     \o/   |             o/                    |          |            \o/       \o        |             o/           \o        o/   \o           \o/            \o/       o/   \o       \o/          \o/           |                   |        
-//  <|              <|             |>   |   <\     |    |   <\     |    o__/_        <|                    < >         o__/_         |         |>       o__/_        <|             |>      <|__ __|>           |              |       <|__ __|>       |            |            o__/_              < >       
-//   \\              \\           //   / \    \o  / \  / \    \o  / \   |             \\                    |          |            / \       //        |             \\           //       /       \          < >            < >      /       \      / \          / \           |                   |        
-//     \         /     \         /     \o/     v\ \o/  \o/     v\ \o/  <o>              \         /         o         <o>           \o/      /         <o>              \         /       o/         \o         \o    o/\o    o/     o/         \o    \o/          \o/          <o>                  o        
-//      o       o       o       o       |       <\ |    |       <\ |    |                o       o         <|          |             |      o           |                o       o       /v           v\         v\  /v  v\  /v     /v           v\    |            |            |                  <|        
-//      <\__ __/>       <\__ __/>      / \        < \  / \        < \  / \  _\o__/_      <\__ __/>         / \        / \  _\o__/_  / \  __/>          / \  _\o__/_      <\__ __/>      />             <\         <\/>    <\/>     />             <\  / \ _\o__/_  / \ _\o__/_  / \  _\o__/_        / \       
-                                                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                                           
+//       o__ __o         o__ __o        o          o    o          o    o__ __o__/_       o__ __o    ____o__ __o____   o__ __o__/_   o__ __o            o__ __o__/_       o__ __o               o               o              o           o           o            o            o__ __o__/_  ____o__ __o____
+//      /v     v\       /v     v\      <|\        <|>  <|\        <|>  <|    v           /v     v\    /   \   /   \   <|    v       <|     v\          <|    v           /v     v\             <|>             <|>            <|>         <|>         <|>          <|>          <|    v        /   \   /   \
+//     />       <\     />       <\     / \\o      / \  / \\o      / \  < >              />       <\        \o/        < >           / \     <\         < >              />       <\            / \             / \            / \         / \         / \          / \          < >                 \o/
+//   o/              o/           \o   \o/ v\     \o/  \o/ v\     \o/   |             o/                    |          |            \o/       \o        |             o/           \o        o/   \o           \o/            \o/       o/   \o       \o/          \o/           |                   |
+//  <|              <|             |>   |   <\     |    |   <\     |    o__/_        <|                    < >         o__/_         |         |>       o__/_        <|             |>      <|__ __|>           |              |       <|__ __|>       |            |            o__/_              < >
+//   \\              \\           //   / \    \o  / \  / \    \o  / \   |             \\                    |          |            / \       //        |             \\           //       /       \          < >            < >      /       \      / \          / \           |                   |
+//     \         /     \         /     \o/     v\ \o/  \o/     v\ \o/  <o>              \         /         o         <o>           \o/      /         <o>              \         /       o/         \o         \o    o/\o    o/     o/         \o    \o/          \o/          <o>                  o
+//      o       o       o       o       |       <\ |    |       <\ |    |                o       o         <|          |             |      o           |                o       o       /v           v\         v\  /v  v\  /v     /v           v\    |            |            |                  <|
+//      <\__ __/>       <\__ __/>      / \        < \  / \        < \  / \  _\o__/_      <\__ __/>         / \        / \  _\o__/_  / \  __/>          / \  _\o__/_      <\__ __/>      />             <\         <\/>    <\/>     />             <\  / \ _\o__/_  / \ _\o__/_  / \  _\o__/_        / \
 
 // This contract implements direct debit from a connected wallet
 // It supports only ERC-20 tokens
@@ -152,6 +148,11 @@ contract ConnectedWallets is DirectDebit {
 
         // The authorized amount must be bigger or equal than the amount withdrawn!
         if (debit[0] < debit[3]) revert PaymentNotAuthorized();
+
+        //If the payment is dynamic, the only approved intent solver is the payee
+        if (debit[0] != debit[3]) {
+            if (msg.sender != payee) revert OnlyApprovedRelayer();
+        }
 
         // The connected wallet has insufficient allowance I throw an error
         if (
