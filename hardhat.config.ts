@@ -10,7 +10,6 @@ import "solidity-coverage";
 import "hardhat-abi-exporter";
 
 dotenv.config();
-
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
@@ -52,6 +51,18 @@ const config: HardhatUserConfig = {
     //     ? [process.env.DEPLOY_KEY]
     //     : [],
     // },
+    // arbsepolia:{
+    //   url: process.env.ARBITRUM_SEPOLIA,
+    //     accounts: process.env.DEPLOY_KEY !== undefined
+    //     ? [process.env.DEPLOY_KEY]
+    //     : [],
+    // },
+    arbmainnet:{
+      url: process.env.ARBITRUM_ONE,
+        accounts: process.env.DEPLOY_KEY !== undefined
+        ? [process.env.DEPLOY_KEY]
+        : [],
+    }
   },
   gasReporter: {
     enabled: true,

@@ -55,3 +55,17 @@ main().catch((error) => {
 // Verifier contract is deployed to  0x5e93788886D8712C0cDe623fB22dCf979ed07724
 // Virtual Accounts contract is deployed to :  0xc4Cf42D5a6F4F061cf5F98d0338FC5913b6fF581
 // Connected Wallets contract is deployed to:  0xF9962f3C23De4e864E56ef29125D460c785905c6
+
+
+
+//Arbitrum SEPOLIA
+
+// Verifier contract is deployed to  0x26Cb79a592dC3F2F4e588Ed19A5A5314779fe80E
+// Virtual Accounts contract is deployed to :  0x5586938a2fC4489661E868c5800769Fb10847fC5
+// Connected Wallets contract is deployed to:  0x3Cad43A3038F0E657753C0129ce7Ea4a5801EC90
+
+
+//Arbirum MAINNET
+// Verifier contract is deployed to  0x26Cb79a592dC3F2F4e588Ed19A5A5314779fe80E
+// Virtual Accounts contract is deployed to :  0x5586938a2fC4489661E868c5800769Fb10847fC5
+// Connected Wallets contract is deployed to:  0x3Cad43A3038F0E657753C0129ce7Ea4a5801EC90
