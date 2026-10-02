@@ -1,3 +1,5 @@
+
+
 // Sources flattened with hardhat v2.15.0 https://hardhat.org
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.9.1
@@ -110,7 +112,6 @@ abstract contract Ownable is Context {
 
 // File @openzeppelin/contracts/security/Pausable.sol@v4.9.1
 
-
 /**
  * @dev Contract module which allows children to implement an emergency stop
  * mechanism that can be triggered by an authorized account.
@@ -213,7 +214,6 @@ abstract contract Pausable is Context {
 
 // File @openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol@v4.9.1
 
-
 /**
  * @dev Interface of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in
  * https://eips.ethereum.org/EIPS/eip-2612[EIP-2612].
@@ -272,7 +272,6 @@ interface IERC20Permit {
 
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v4.9.1
-
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -350,7 +349,6 @@ interface IERC20 {
 
 
 // File @openzeppelin/contracts/utils/Address.sol@v4.9.1
-
 
 /**
  * @dev Collection of functions related to the address type
@@ -735,7 +733,6 @@ library SafeERC20 {
 
 // File @openzeppelin/contracts/security/ReentrancyGuard.sol@v4.9.1
 
-
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.
  *
@@ -811,7 +808,6 @@ abstract contract ReentrancyGuard {
 
 
 // File @openzeppelin/contracts/utils/math/SafeMath.sol@v4.9.1
-
 
 // CAUTION
 // This version of SafeMath should only be used with Solidity 0.8 or later,
@@ -1027,7 +1023,6 @@ library SafeMath {
 
 // File contracts/Errors.sol
 
-
 interface DirectDebitErrors {
     /*
    Account already active.This error is thrown if we try to create an account with a commitment that exists already!
@@ -1132,6 +1127,11 @@ This error is thrown when an ETH top up msg.value is not balance
     This error occurs when a wallet tries to connect twice with the the same tokens. That doesn't work.
      */
     error WalletAlreadyConnected();
+
+    /**
+    This error occurs on direct debit if the relayer was not approved
+     */
+    error OnlyApprovedRelayer();
 }
 
 /**
@@ -1207,19 +1207,19 @@ interface DirectDebitEvents {
 
 
 
-//   o__ __o         o                                        o           o__ __o                     o             o     o     
-//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>    
-//  / \     <\                                               < >         / \     <\                  / >                 < >    
-//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |     
-//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_ 
-//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |     
-//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |     
-//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o     
-//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__  
-                                                                                                                             
-                                                                                                                             
-                                                                                                                             
 
+
+
+
+//   o__ __o         o                                        o           o__ __o                     o             o     o
+//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>
+//  / \     <\                                               < >         / \     <\                  / >                 < >
+//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |
+//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_
+//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |
+//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |
+//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o
+//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__
 
 // This contract  implements direct debit using crypto notes
 // The user can create a Note off-chain that is stored encrypted inside the smart contract
@@ -1304,6 +1304,12 @@ abstract contract DirectDebit is
     */
     mapping(bytes32 => string) public encryptedNotes;
 
+    /*
+      The relayers approved to call DirectDebit, this was added for the AVAX deployment
+     */
+
+    mapping(address => bool) public approvedRelayers;
+
     /**
         @dev : the constructor
         @param _verifier is the address of SNARK verifier contract        
@@ -1348,6 +1354,13 @@ abstract contract DirectDebit is
     }
 
     /**
+     The owner must approve a relayer to call direct debit. This is an extra security layer added to the contracts
+     */
+    function approveRelayer(address _addr, bool setTo) external onlyOwner {
+        approvedRelayers[_addr] = setTo;
+    }
+
+    /**
       A function that allows direct debit with a reusable proof
       N times to M address with L max amount that can be withdrawn
       The proof and public inputs are the PaymentIntent
@@ -1366,6 +1379,7 @@ abstract contract DirectDebit is
         address payee,
         uint256[4] calldata debit
     ) external nonReentrant whenNotPaused {
+        if (!approvedRelayers[msg.sender]) revert OnlyApprovedRelayer();
         _verifyPaymentIntent(proof, hashes, payee, debit);
         _processPaymentIntent(hashes, payee, debit);
     }

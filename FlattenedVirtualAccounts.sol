@@ -1,3 +1,4 @@
+
 // Sources flattened with hardhat v2.15.0 https://hardhat.org
 
 // File @openzeppelin/contracts/utils/Context.sol@v4.9.1
@@ -110,7 +111,6 @@ abstract contract Ownable is Context {
 
 
 // File @openzeppelin/contracts/security/Pausable.sol@v4.9.1
-
 
 /**
  * @dev Contract module which allows children to implement an emergency stop
@@ -1029,6 +1029,7 @@ library SafeMath {
 
 // File contracts/Errors.sol
 
+
 interface DirectDebitErrors {
     /*
    Account already active.This error is thrown if we try to create an account with a commitment that exists already!
@@ -1133,6 +1134,11 @@ This error is thrown when an ETH top up msg.value is not balance
     This error occurs when a wallet tries to connect twice with the the same tokens. That doesn't work.
      */
     error WalletAlreadyConnected();
+
+    /**
+    This error occurs on direct debit if the relayer was not approved
+     */
+    error OnlyApprovedRelayer();
 }
 
 /**
@@ -1207,19 +1213,21 @@ interface DirectDebitEvents {
 
 
 
-//   o__ __o         o                                        o           o__ __o                     o             o     o     
-//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>    
-//  / \     <\                                               < >         / \     <\                  / >                 < >    
-//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |     
-//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_ 
-//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |     
-//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |     
-//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o     
-//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__  
-                                                                                                                             
-                                                                                                                             
-                                                                                                                             
 
+
+
+
+
+
+//   o__ __o         o                                        o           o__ __o                     o             o     o
+//  <|     v\      _<|>_                                     <|>         <|     v\                   <|>          _<|>_  <|>
+//  / \     <\                                               < >         / \     <\                  / >                 < >
+//  \o/       \o     o    \o__ __o     o__  __o       __o__   |          \o/       \o     o__  __o   \o__ __o       o     |
+//   |         |>   <|>    |     |>   /v      |>     />  \    o__/_       |         |>   /v      |>   |     v\     <|>    o__/_
+//  / \       //    / \   / \   < >  />      //    o/         |          / \       //   />      //   / \     <\    / \    |
+//  \o/      /      \o/   \o/        \o    o/     <|          |          \o/      /     \o    o/     \o/      /    \o/    |
+//   |      o        |     |          v\  /v __o   \\         o           |      o       v\  /v __o   |      o      |     o
+//  / \  __/>       / \   / \          <\/> __/>    _\o__</   <\__       / \  __/>        <\/> __/>  / \  __/>     / \    <\__
 
 // This contract  implements direct debit using crypto notes
 // The user can create a Note off-chain that is stored encrypted inside the smart contract
@@ -1304,6 +1312,12 @@ abstract contract DirectDebit is
     */
     mapping(bytes32 => string) public encryptedNotes;
 
+    /*
+      The relayers approved to call DirectDebit, this was added for the AVAX deployment
+     */
+
+    mapping(address => bool) public approvedRelayers;
+
     /**
         @dev : the constructor
         @param _verifier is the address of SNARK verifier contract        
@@ -1348,6 +1362,13 @@ abstract contract DirectDebit is
     }
 
     /**
+     The owner must approve a relayer to call direct debit. This is an extra security layer added to the contracts
+     */
+    function approveRelayer(address _addr, bool setTo) external onlyOwner {
+        approvedRelayers[_addr] = setTo;
+    }
+
+    /**
       A function that allows direct debit with a reusable proof
       N times to M address with L max amount that can be withdrawn
       The proof and public inputs are the PaymentIntent
@@ -1366,6 +1387,7 @@ abstract contract DirectDebit is
         address payee,
         uint256[4] calldata debit
     ) external nonReentrant whenNotPaused {
+        if (!approvedRelayers[msg.sender]) revert OnlyApprovedRelayer();
         _verifyPaymentIntent(proof, hashes, payee, debit);
         _processPaymentIntent(hashes, payee, debit);
     }
@@ -1491,6 +1513,7 @@ abstract contract DirectDebit is
 
 
 
+
 //   o              o     o                o                                 o               o                                                                      o
 //  <|>            <|>  _<|>_             <|>                               <|>             <|>                                                                    <|>
 //  < >            < >                    < >                               / \             / \                                                                    < >
@@ -1553,7 +1576,7 @@ contract VirtualAccounts is DirectDebit {
     }
 
     /**
-   @dev : depositToken is for creating a bunnyNote by depositing tokens, the wallet calling this function must approve ERC20 spend first
+   @dev : depositToken is for creating an account by depositing tokens, the wallet calling this function must approve ERC20 spend first
    @param _commitment is the poseidon hash of the note
    @param balance is the amount of token transferred to the contract that represents the note's value. balance does not contain the fee
    @param token is the ERC20 token that is used for this deposits  
